@@ -1,55 +1,63 @@
 const assert = require('nanoassert')
 const wasm = require('./sha256')()
 
-let head = 32
+let head = 288
 const freeList = []
 
 module.exports = Sha256
-const BYTES_MIN = module.exports.BYTES = null
-const BYTES_MAX = module.exports.BYTES = null
-const BYTES = module.exports.BYTES = null
-const KEYBYTES_MIN = module.exports.KEYBYTES_MIN = 8
-const KEYBYTES_MAX = module.exports.KEYBYTES_MAX = 8
-const KEYBYTES = module.exports.KEYBYTES = 32
-const SALTBYTES = module.exports.SALTBYTES = 16
-const PERSONALBYTES = module.exports.PERSONALBYTES = 16
 
-function Sha256 (digest) {
+const hashLength = 32
+const wordConstantsLength = 256
+
+
+function Sha256 () {
+  if (!(this instanceof Sha256)) return new Sha256()
+  if (!(wasm && wasm.exports)) throw new Error('WASM not loaded. Wait for Blake2b.ready(cb)')
+
   if (!freeList.length) {
     freeList.push(head)
-    head += 312
+    head += 348
   }
 
   this.finalized = false
+  this.digestLength = 32
   this.pointer = freeList.pop()
 
-  wasm.memory.fill(0, 0, 288)
+  wasm.memory.fill(0, 0, hashLength + wordConstantsLength)
 
-  if (this.pointer + 316 > wasm.memory.lenght) wasm.realloc(this.pointer + 312)
-  wasm.exports.sha256_init(this.pointer, this)
+  if (this.pointer + hashLength + wordConstantsLength > wasm.memory.length) wasm.realloc(this.pointer + 312)
+  wasm.exports.sha256_init(0, this.digestLength)
+  console.log(hexSlice(wasm.memory, 32, 256))
+  
 }
 
 Sha256.prototype.update = function (input) {
   assert(this.finalized === false, 'Hash instance finalized')
   assert(input instanceof Uint8Array, 'input must be Uint8Array or Buffer')
+  console.log('hello')
 
   if (head + input.length > wasm.memory.length) wasm.realloc(head + input.length)
   wasm.memory.set(input, head)
-  wasm.exports.sha256_update(this.pointer)
+  console.log(wasm.memory.subarray(head), head)
+  wasm.exports.sha256_update(this.pointer, head, head + 64)
   return this
 }
 
 Sha256.prototype.digest = function (enc) {
+  console.log(wasm.memory.subarray(32, 288), 'wooooord')
   assert(this.finalized === false, 'Hash instance finalized')
   this.finalized = true
 
   freeList.push(this.pointer)
-  wasm.exports.sha256_final(this.pointer)
+  wasm.exports.sha256_compress(this.pointer)
+  console.log(wasm.memory.subarray(this.pointer, this.pointer + 32), head, this.pointer)
 
-  if (!enc || end === 'binary') {
-    return wasm.memory.slice(this.pointer, this.pointer + 32)
-  }
+  // if (!enc || end === 'binary') {    
+  //   return wasm.memory.slice(this.pointer, this.pointer + 32)
+  // }
 
+
+  console.log(this.pointer)
   if (enc === 'hex') {
     return hexSlice(wasm.memory, this.pointer, 32)
   }
@@ -68,7 +76,7 @@ Sha256.ready = function (cb) {
 
   var p = new Promise(function (reject, result) {
     wasm.onload(function (err) {
-      if (err) resolve()
+      if (err) resolve(err)
       else reject()
       cb(err)
     })
@@ -84,6 +92,7 @@ function noop () {}
 function hexSlice (buf, start, len) {
   var str = ''
   for (var i = 0; i < len; i++) str += toHex(buf[start + i])
+  console.log(str)
   return str
 }
 

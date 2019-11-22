@@ -23,7 +23,7 @@ function round (i) {
 ;; T1 = h + big_sig1(e) + ch(e, f, g) + K${i} + W${i}
 ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-(set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $r7) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w${i})) (i32.load offset=32 (get_local $ptr))))
+(set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $r7) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w${i})) (i32.load offset=${i * 4} (i32.const 32))))
 (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
 ;; update registers
