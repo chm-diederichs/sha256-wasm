@@ -15,44 +15,44 @@ function round (i) {
 
 ;; precompute intermediate values
 
-(set_local $ch_res (call $Ch (get_local $r4) (get_local $r5) (get_local $r6)))
-(set_local $maj_res (call $Maj (get_local $r0) (get_local $r1) (get_local $r2)))
-(set_local $big_sig0_res (call $big_sig0 (get_local $r0)))
-(set_local $big_sig1_res (call $big_sig1 (get_local $r4)))
-
 ;; T1 = h + big_sig1(e) + ch(e, f, g) + K${i} + W${i}
 ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-(set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $r7) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w${i})) (i32.load offset=${i * 4} (i32.const 32))))
+(set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+(set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+(set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+(set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+(set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w${i})) (i32.load offset=${i * 4} (i32.const 32))))
 (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
 ;; update registers
 
 ;; h <- g
-(set_local $r7 (get_local $r6))
+(set_local $h (get_local $g))
 
 ;; g <- f
-(set_local $r6 (get_local $r5))  
+(set_local $g (get_local $f))  
 
 ;; f <- e
-(set_local $r5 (get_local $r4))  
+(set_local $f (get_local $e))  
 
 ;; e <- d + T1
-(set_local $r4 (i32.add (get_local $r3) (get_local $T1)))
+(set_local $e (i32.add (get_local $d) (get_local $T1)))
 
 ;; d <- c
-(set_local $r3 (get_local $r2))  
+(set_local $d (get_local $c))  
 
 ;; c <- b
-(set_local $r2 (get_local $r1))  
+(set_local $c (get_local $b))  
 
 ;; b <- a
-(set_local $r1 (get_local $r0))  
+(set_local $b (get_local $a))  
 
 ;; a <- T1 + T2
-(set_local $r0 (i32.add (get_local $T1) (get_local $T2)))
+(set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-`  
+`
 }
 
 const K_words = [
@@ -122,7 +122,31 @@ const K_words = [
   'c67178f2'
 ]
 
+const IV = [
+  '6a09e667',
+  'bb67ae85',
+  '3c6ef372',
+  'a54ff53a',
+  '510e527f',
+  '9b05688c',
+  '1f83d9ab',
+  '5be0cd19'
+]
 
 for (let i = 0; i < 64; i++) {
   str.write(round(i))
+  // console.log(`i32.store (i32.const ${292 + 4 * i}) (get_local $w${i}))`)
+}
+
+// for (let word of IV) {
+//   console.log(reverseEndian(word))
+// }
+
+function reverseEndian (string) {
+  const reverse = []
+  for (let i = 0; i < string.length / 2; i++) {
+    reverse.push(string.slice(string.length - (2 * (i + 1)), string.length - (2 * i)))
+  }
+
+  return reverse.join('')
 }

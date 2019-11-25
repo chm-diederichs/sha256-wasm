@@ -501,40 +501,16 @@
 
     ;; precompute intermediate values
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g))) ;; (i32.const 0x8cc9851f));; 
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)));; (i32.const 0x3a6fe667))
+    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K0 + W0
+    ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
     (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
     (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; T1 = h + big_sig1(e) + Ch(e, f, g) + K0 + W0
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    ;; (set_local $T1 (i32.add (i32.add (i32.add (i32.add (i32.const 0x19cde05b) (i32.const 0x61626380)) (i32.const 0x3587272b)) (i32.const 0x1f85c98c)) (i32.const 0x428a2f98)));;(get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w0)) (i32.load offset=0 (i32.const 32))))
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $w0)) (get_local $big_sig1_res)) (get_local $ch_res)) (i32.load offset=0 (i32.const 32))));;(get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w0)) (i32.load offset=0 (i32.const 32))))
-    ;; (set_local $T1 (i32.add (i32.add (i32.add (i32.add (i32.const 0x19cde05b) (i32.const 0x80636261)) (i32.const 0x2b278735)) (i32.const 0x8cc9851f)) (i32.const 0x982f8a42)));;(get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w0)) (i32.load offset=0 (i32.const 32))))
+    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w0)) (i32.load offset=0 (i32.const 32))))
     (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-
-    ;; (call $i32.log (get_local $ch_res))
-    ;; (call $i32.log (get_local $w0))
-    ;; (call $i32.log (get_local $h))
-    ;; (call $i32.log (get_local $a))
-    ;; (call $i32.log (get_local $b))
-    ;; (call $i32.log (get_local $c))
-    ;; (call $i32.log (get_local $maj_res))
-    ;; (call $i32.log (i32.const 0))
-    ;; (call $i32.log (i32.const 0x3a6fe667))
-    ;; ;; (call $i32.log (i32.load offset=0 (i32.const 32)))
-    ;; (call $i32.log (get_local $big_sig0_res))
-    ;; (call $i32.log (i32.add (get_local $T1) (get_local $T2)))
-    ;; (call $i32.log (i32.add (i32.const 0x54da50e8) (i32.const 0x08909ae5)))
-    ;; (call $i32.log (i32.const 0))
-    ;; (call $i32.log (i32.add (i32.const 0x31df4b82) (get_local $T2)))
-    ;; (call $i32.log (i32.add (get_local $T1) (i32.const 0x08909ae5)))
-    ;; (call $i32.log (get_local $big_sig1_res))
-    ;; (call $i32.log (get_local $T1))
-    ;; (call $i32.log (get_local $d))
-    ;; (call $i32.log (get_local $T2))
 
     ;; update registers
 
@@ -561,15 +537,6 @@
 
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
 
     ;; ROUND 1
 
@@ -612,17 +579,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 1))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 2
 
     ;; precompute intermediate values
@@ -664,17 +620,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 2))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 3
 
     ;; precompute intermediate values
@@ -716,17 +661,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 3))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 4
 
     ;; precompute intermediate values
@@ -768,17 +702,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 4))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 5
 
     ;; precompute intermediate values
@@ -820,17 +743,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 5))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 6
 
     ;; precompute intermediate values
@@ -872,17 +784,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 6))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 7
 
     ;; precompute intermediate values
@@ -924,17 +825,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 7))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 8
 
     ;; precompute intermediate values
@@ -976,17 +866,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 8))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 9
 
     ;; precompute intermediate values
@@ -1028,17 +907,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 9))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 10
 
     ;; precompute intermediate values
@@ -1080,17 +948,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 10))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 11
 
     ;; precompute intermediate values
@@ -1132,17 +989,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 11))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 12
 
     ;; precompute intermediate values
@@ -1184,17 +1030,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 12))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 13
 
     ;; precompute intermediate values
@@ -1236,17 +1071,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 13))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 14
 
     ;; precompute intermediate values
@@ -1288,17 +1112,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 14))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 15
 
     ;; precompute intermediate values
@@ -1340,17 +1153,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 15))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 16
 
     ;; precompute intermediate values
@@ -1392,17 +1194,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 16))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 17
 
     ;; precompute intermediate values
@@ -1444,17 +1235,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 17))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 18
 
     ;; precompute intermediate values
@@ -1496,17 +1276,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 18))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 19
 
     ;; precompute intermediate values
@@ -1548,17 +1317,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 19))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 20
 
     ;; precompute intermediate values
@@ -1600,17 +1358,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 20))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 21
 
     ;; precompute intermediate values
@@ -1652,17 +1399,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 21))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 22
 
     ;; precompute intermediate values
@@ -1704,17 +1440,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 22))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 23
 
     ;; precompute intermediate values
@@ -1756,17 +1481,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 23))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 24
 
     ;; precompute intermediate values
@@ -1808,17 +1522,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 24))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 25
 
     ;; precompute intermediate values
@@ -1860,17 +1563,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 25))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 26
 
     ;; precompute intermediate values
@@ -1912,17 +1604,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 26))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 27
 
     ;; precompute intermediate values
@@ -1964,17 +1645,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 27))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 28
 
     ;; precompute intermediate values
@@ -2016,17 +1686,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 28))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 29
 
     ;; precompute intermediate values
@@ -2068,17 +1727,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 29))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 30
 
     ;; precompute intermediate values
@@ -2120,17 +1768,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 30))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 31
 
     ;; precompute intermediate values
@@ -2172,17 +1809,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 31))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 32
 
     ;; precompute intermediate values
@@ -2224,17 +1850,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 32))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 33
 
     ;; precompute intermediate values
@@ -2276,17 +1891,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 33))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 34
 
     ;; precompute intermediate values
@@ -2328,17 +1932,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 34))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 35
 
     ;; precompute intermediate values
@@ -2380,17 +1973,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 35))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 36
 
     ;; precompute intermediate values
@@ -2432,17 +2014,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 36))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 37
 
     ;; precompute intermediate values
@@ -2484,17 +2055,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 37))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 38
 
     ;; precompute intermediate values
@@ -2536,17 +2096,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 38))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 39
 
     ;; precompute intermediate values
@@ -2588,17 +2137,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 39))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 40
 
     ;; precompute intermediate values
@@ -2640,17 +2178,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 40))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 41
 
     ;; precompute intermediate values
@@ -2692,17 +2219,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 41))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 42
 
     ;; precompute intermediate values
@@ -2744,17 +2260,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 42))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 43
 
     ;; precompute intermediate values
@@ -2796,17 +2301,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 43))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 44
 
     ;; precompute intermediate values
@@ -2848,17 +2342,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 44))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 45
 
     ;; precompute intermediate values
@@ -2900,17 +2383,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 45))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 46
 
     ;; precompute intermediate values
@@ -2952,17 +2424,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 46))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 47
 
     ;; precompute intermediate values
@@ -3004,17 +2465,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 47))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 48
 
     ;; precompute intermediate values
@@ -3056,17 +2506,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 48))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 49
 
     ;; precompute intermediate values
@@ -3108,17 +2547,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 49))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 50
 
     ;; precompute intermediate values
@@ -3160,17 +2588,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 50))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 51
 
     ;; precompute intermediate values
@@ -3212,17 +2629,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 51))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 52
 
     ;; precompute intermediate values
@@ -3264,17 +2670,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 52))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 53
 
     ;; precompute intermediate values
@@ -3316,17 +2711,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 53))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 54
 
     ;; precompute intermediate values
@@ -3368,17 +2752,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 54))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 55
 
     ;; precompute intermediate values
@@ -3420,17 +2793,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 55))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 56
 
     ;; precompute intermediate values
@@ -3472,17 +2834,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 56))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 57
 
     ;; precompute intermediate values
@@ -3524,17 +2875,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 57))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 58
 
     ;; precompute intermediate values
@@ -3576,17 +2916,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 58))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 59
 
     ;; precompute intermediate values
@@ -3628,17 +2957,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 59))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 60
 
     ;; precompute intermediate values
@@ -3680,17 +2998,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 60))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 61
 
     ;; precompute intermediate values
@@ -3732,17 +3039,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 61))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 62
 
     ;; precompute intermediate values
@@ -3784,17 +3080,6 @@
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    (call $i64.log (i64.const 62))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
-    
     ;; ROUND 63
 
     ;; precompute intermediate values
@@ -3835,17 +3120,6 @@
 
     ;; a <- T1 + T2
     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    (call $i64.log (i64.const 63))
-
-    (call $i32.log (get_local $h))
-    (call $i32.log (get_local $g))
-    (call $i32.log (get_local $f))
-    (call $i32.log (get_local $e))
-    (call $i32.log (get_local $d))
-    (call $i32.log (get_local $c))
-    (call $i32.log (get_local $b))
-    (call $i32.log (get_local $a))
 
     
     ;; HASH COMPLETE FOR MESSAGE BLOCK

@@ -1,5 +1,17 @@
 const assert = require('nanoassert')
-const wasm = require('./sha256')()
+const wasm = require('./sha256')({
+  imports: {
+    debug: {
+      log (...args) {
+        console.log(...args.map(int => (int >>> 0).toString(16).padStart(8, '0')))
+      },
+      log_tee (arg) {
+        console.log((arg >>> 0).toString(16).padStart(8, '0'))
+        return arg
+      }
+    }
+  }
+})
 
 let head = 288
 const freeList = []
@@ -22,44 +34,44 @@ function Sha256 () {
   this.finalized = false
   this.digestLength = 32
   this.pointer = freeList.pop()
+  this.pointer = 0
 
   wasm.memory.fill(0, 0, hashLength + wordConstantsLength)
 
   if (this.pointer + hashLength + wordConstantsLength > wasm.memory.length) wasm.realloc(this.pointer + 312)
-  wasm.exports.sha256_init(0, this.digestLength)
-  console.log(hexSlice(wasm.memory, 32, 256))
   
+  wasm.exports.sha256_init(this.pointer, this.digestLength)
 }
 
 Sha256.prototype.update = function (input) {
   assert(this.finalized === false, 'Hash instance finalized')
   assert(input instanceof Uint8Array, 'input must be Uint8Array or Buffer')
-  console.log('hello')
 
   if (head + input.length > wasm.memory.length) wasm.realloc(head + input.length)
   wasm.memory.set(input, head)
-  console.log(wasm.memory.subarray(head), head)
-  wasm.exports.sha256_update(this.pointer, head, head + 64)
+  // console.log(wasm.memory.subarray(this.pointer), head, 'hash state + word constants')
+
+  wasm.exports.sha256_update(288, head, head + 64)
   return this
 }
 
 Sha256.prototype.digest = function (enc) {
-  console.log(wasm.memory.subarray(32, 288), 'wooooord')
+  // console.log(wasm.memory.subarray(288, 388), 'input data')
   assert(this.finalized === false, 'Hash instance finalized')
   this.finalized = true
 
   freeList.push(this.pointer)
   wasm.exports.sha256_compress(this.pointer)
-  console.log(wasm.memory.subarray(this.pointer, this.pointer + 32), head, this.pointer)
+  // console.log(wasm.memory.subarray(this.pointer, this.pointer + 32), head, this.pointer)
+
 
   // if (!enc || end === 'binary') {    
   //   return wasm.memory.slice(this.pointer, this.pointer + 32)
   // }
 
-
-  console.log(this.pointer)
+  return int32reverse(wasm.memory, 0, 32)
   if (enc === 'hex') {
-    return hexSlice(wasm.memory, this.pointer, 32)
+    return hexSlice(wasm.memory, 0, 32)
   }
 
   assert(enc instanceof Uint8Array && enc.length >= 32, 'input must be Uint8Array or Buffer')
@@ -89,10 +101,25 @@ Sha256.prototype.ready = Sha256.ready
 
 function noop () {}
 
+function int32reverse (buf, start, len) {
+  var str = ''
+  var chars = []
+
+  for (let i = 0; i < len; i++) {
+    chars.push(toHex(buf[start + i]))
+
+    if ((i + 1) % 4 === 0) {
+      str += chars.reverse().join('')
+      chars = []
+    }
+  }
+
+  return str
+}
+
 function hexSlice (buf, start, len) {
   var str = ''
   for (var i = 0; i < len; i++) str += toHex(buf[start + i])
-  console.log(str)
   return str
 }
 
