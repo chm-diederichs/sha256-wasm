@@ -1,0 +1,27 @@
+{
+  "name": "sha256-wasm",
+  "version": "0.0.0",
+  "description": "WebAssembly implementation of SHA-256",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chm-diederichs/sha256-wasm.git"
+  },
+  "keywords": [
+    "WebAssembly",
+    "SHA-256"
+  ],
+  "author": "Christophe Diederichs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chm-diederichs/sha256-wasm/issues"
+  },
+  "homepage": "https://github.com/chm-diederichs/sha256-wasm#readme",
+  "dependencies": {
+    "js-sha256": "^0.9.0"
+  },
+  "devDependencies": {}
+}

@@ -1,14 +1,25 @@
 const sha256 = require('./')
 
-const buf = new Uint8Array(64)
-buf[0] = 0x80
-buf[1] = 0x63
-buf[2] = 0x62
-buf[3] = 0x61
-buf[60] = 0x18
+const a = 0x61
+
+const arr = new Uint8Array(128)
+
+let count = 0
+
+for (let i = 0; i < 14; i++) {
+  arr[count++] = a + i + 3
+  arr[count++] = a + i + 2
+  arr[count++] = a + i + 1
+  arr[count++] = a + i
+}
+arr[count] = 0x80
+
+arr[126] = 0x01
+arr[127] = 0xc0
+
 
 const hash = sha256()
-  .update(buf)
+  .update('abc')
   .digest('hex')
 console.log(hash)
 // console.log('1', hash.slice(0, 8))

@@ -44,14 +44,18 @@ function Sha256 () {
 }
 
 Sha256.prototype.update = function (input) {
+  let [ inputBuf, length ] = formatInput(input)
+  console.log(inputBuf)
   assert(this.finalized === false, 'Hash instance finalized')
-  assert(input instanceof Uint8Array, 'input must be Uint8Array or Buffer')
+  assert(inputBuf instanceof Uint8Array, 'input must be Uint8Array or Buffer')
 
   if (head + input.length > wasm.memory.length) wasm.realloc(head + input.length)
-  wasm.memory.set(input, head)
+  console.log(inputBuf)
+  wasm.memory.set(inputBuf, head)
   // console.log(wasm.memory.subarray(this.pointer), head, 'hash state + word constants')
-
-  wasm.exports.sha256_update(288, head, head + 64)
+  console.log(head, head + length)
+  wasm.exports.sha256_update(288, head, head + length)
+  console.log(hexSlice(wasm.memory, 288, 64))
   return this
 }
 
@@ -100,6 +104,27 @@ Sha256.ready = function (cb) {
 Sha256.prototype.ready = Sha256.ready
 
 function noop () {}
+
+function formatInput (input) {
+  if (input instanceof Uint8Array) return input
+
+  const inputArray = new Uint32Array(Math.ceil(input.length / 4))
+
+  const buf = Buffer.alloc(inputArray.byteLength)
+  buf.set(Buffer.from(input), 0)
+
+  let i = 0
+
+  for (; i < buf.byteLength / 4; i++) {
+    console.log(buf.readUInt32LE(0))
+    inputArray[i] = buf.readUInt32LE(4 * i)
+  }
+
+  return [
+    new Uint8Array(inputArray.buffer),
+    input.length
+  ]
+}
 
 function int32reverse (buf, start, len) {
   var str = ''
