@@ -1,4 +1,5 @@
 const sha256 = require('./')
+const crypto = require('crypto')
 
 const a = 0x61
 
@@ -19,7 +20,8 @@ arr[127] = 0xc0
 
 
 const hash = sha256()
-  .update('abc')
+  // .update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')
+  .update('hello')
   .digest('hex')
 console.log(hash)
 // console.log('1', hash.slice(0, 8))
@@ -30,3 +32,9 @@ console.log(hash)
 // console.log('6', hash.slice(40, 48))
 // console.log('7', hash.slice(48, 56))
 // console.log('8', hash.slice(56, 64))
+
+const refHash = crypto.createHash('sha256')
+  .update('hello')
+  .digest('hex')
+
+console.log(refHash) 

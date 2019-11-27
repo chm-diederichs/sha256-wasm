@@ -236,32 +236,95 @@
   (func $sha256_update (export "sha256_update") (param $ctx i32) (param $input i32) (param $input_end i32)
     (local $i i32)
     (local $input_length i64)
-    (local $ctr i32)
+    (local $block_end i32)
 
     (set_local $input_length (i64.extend_u/i32 (i32.mul (i32.sub (get_local $input_end) (get_local $input)) (i32.const 8))))
 
-    (set_local $i (i32.const 4))
+    (i32.store8 (get_local $input_end) (i32.const 0x80))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+    ;; (set_local $i (i32.wrap/i64 (get_local $input_length)))
+
+    (block $pad_end
+        (loop $pad
+            (br_if $pad_end (i32.eq (i32.rem_u (i32.sub (get_local $input_end) (get_local $input)) (i32.const 64)) (i32.const 56)))
+            (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+
+            (i32.store8 (get_local $input_end) (i32.const 0))
+            (br $pad)
+        )
+    )    
+
+
+    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 56)))
+    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 48)))
+    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 40)))
+    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 32)))
+    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 24)))
+    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 16)))
+    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 8)))
+
+    ;; (call $i64.log (get_local $input_length))
+
+    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 56)))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+ 
+    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 48)))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+
+    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 40)))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+
+    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 32)))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+
+    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 24)))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+
+    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 16)))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+   
+    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 8)))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+
+    (i64.store8 (get_local $input_end) (get_local $input_length))
+    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+
+
+    ;; (i32.store (get_local $input_end) (i32.wrap/i64 (i64.shr_u (get_local $input_length) (i64.const 32))))
+    ;; (i32.store offset=4 (get_local $input_end) (i32.wrap/i64 (get_local $input_length)))
+    ;; (set_local $input_end (i32.add (get_local $input_end) (i32.const 8)))
+    ;; (call $i32.log (i32.load (i32.sub (get_local $input_end) (i32.const 4))))
+    ;; (call $i32.log (get_local $input))
+    ;; (call $i64.log (get_local $input_length))
+
+    
+    (set_local $i (i32.const 3))
+    (set_local $block_end (i32.const 67))
 
     (block $end
         (loop $start
             (br_if $end (i32.eq (get_local $input) (get_local $input_end)))
             
-            (if (i32.eq (get_local $i) (i32.const 64))
+            (if (i32.eq (get_local $i) (i32.const 67))
                 (then
-                    (set_local $i (i32.const 0))
+                    (set_local $i (i32.const 3))
+                    (set_local $block_end (get_local $block_end) (i32.const 64))
                     (call $sha256_compress (get_local $ctx))
+                    (br $start)
                 )
             )
-
-            (i32.store8 (i32.add (get_local $ctx) (i32.sub (get_local $i) (i32.const 1))) (i32.load8_u (get_local $input)))
+        
+            ;; (call $i32.log (i32.load8_u (get_local $input)))
+            (i32.store8 offset=32 (i32.add (get_local $ctx) (get_local $i)) (i32.load8_u (get_local $input)))
+            ;; (call $i32.log (i32.load8_u (i32.add (get_local $ctx) (get_local $i))))
 
             (set_local $i (i32.sub (get_local $i) (i32.const 1)))
             (set_local $input (i32.add (get_local $input) (i32.const 1)))
 
             ;; int32.load expects little endian, increment by 4 then successively decrement by 1 to load each 4 bytes of input
-            (if (i32.eq (i32.rem_u (get_local $i) (i32.const 4)) (i32.const 0))
+            (if (i32.eq (i32.rem_u (get_local $i) (i32.const 4)) (i32.const 3))
                 (then
-                    (set_local $i (i32.add (get_local $i) (i32.const 4)))
+                    (set_local $i (i32.add (get_local $i) (i32.const 8)))
                 )
             )
 
@@ -273,26 +336,9 @@
     ;; (call $i32.log (i32.add (get_local $ctx) (get_local $i)))
     ;; (call $i32.log (i32.rem_u (get_local $i) (i32.const 4)))
     ;; (call $i32.log (i32.sub (i32.add (get_local $ctx) (get_local $i)) (i32.rem_u (get_local $i) (i32.const 4))))
-    (i32.store8 (i32.sub (i32.add (get_local $ctx) (get_local $i)) (i32.rem_u (get_local $i) (i32.const 4))) (i32.const 0x80))
 
     (set_local $i (i32.add (get_local $i) (i32.const 1)))
-    (set_local $i (i32.const 1))
 
-    (block $pad_end
-        (loop $pad
-            (br_if $pad_end (i32.eq (get_local $i) (i32.const 56)))
-
-            (set_local $i (i32.add (get_local $i) (i32.const 1)))
-
-            (if (i32.eq (get_local $i) (i32.const 64)) (then (set_local $i (i32.const 0))))
-            (br $pad)
-        )
-    )
-
-    (set_local $ctr (i32.const 0))
-
-    (i32.store (i32.add (i32.add (get_local $ctx) (get_local $i)) (i32.const 4)) (i32.wrap/i64(get_local $input_length)))
-    (i32.store (i32.add (get_local $ctx) (get_local $i)) (i32.wrap/i64 (i64.shr_u (get_local $input_length) (i64.const 32)))) 
 
     ;; ;; endian converter
     ;; (block $length_end
@@ -410,22 +456,22 @@
     (local $w63 i32)
 ;; 636
     ;; message loaded
-    (set_local $w0 (i32.load offset=288 (get_local $mem)))
-    (set_local $w1 (i32.load offset=292 (get_local $mem)))
-    (set_local $w2 (i32.load offset=296 (get_local $mem)))
-    (set_local $w3 (i32.load offset=300 (get_local $mem)))
-    (set_local $w4 (i32.load offset=304 (get_local $mem)))
-    (set_local $w5 (i32.load offset=308 (get_local $mem)))
-    (set_local $w6 (i32.load offset=312 (get_local $mem)))
-    (set_local $w7 (i32.load offset=316 (get_local $mem)))
-    (set_local $w8 (i32.load offset=320 (get_local $mem)))
-    (set_local $w9 (i32.load offset=324 (get_local $mem)))
-    (set_local $w10 (i32.load offset=328 (get_local $mem)))
-    (set_local $w11 (i32.load offset=332 (get_local $mem)))
-    (set_local $w12 (i32.load offset=336 (get_local $mem)))
-    (set_local $w13 (i32.load offset=340 (get_local $mem)))
-    (set_local $w14 (i32.load offset=344 (get_local $mem)))
-    (set_local $w15 (i32.load offset=348 (get_local $mem)))
+    (set_local $w0 (i32.load offset=32 (get_local $mem)))
+    (set_local $w1 (i32.load offset=36 (get_local $mem)))
+    (set_local $w2 (i32.load offset=40 (get_local $mem)))
+    (set_local $w3 (i32.load offset=44 (get_local $mem)))
+    (set_local $w4 (i32.load offset=48 (get_local $mem)))
+    (set_local $w5 (i32.load offset=52 (get_local $mem)))
+    (set_local $w6 (i32.load offset=56 (get_local $mem)))
+    (set_local $w7 (i32.load offset=60 (get_local $mem)))
+    (set_local $w8 (i32.load offset=64 (get_local $mem)))
+    (set_local $w9 (i32.load offset=68 (get_local $mem)))
+    (set_local $w10 (i32.load offset=72 (get_local $mem)))
+    (set_local $w11 (i32.load offset=76 (get_local $mem)))
+    (set_local $w12 (i32.load offset=80 (get_local $mem)))
+    (set_local $w13 (i32.load offset=84 (get_local $mem)))
+    (set_local $w14 (i32.load offset=88 (get_local $mem)))
+    (set_local $w15 (i32.load offset=92 (get_local $mem)))
     
     ;; words 16-63 are defined by w[j] <- sig1(w[j-2]) + w[j-7] + sig0(w[j-15]) + w[j-16]
     (set_local $w16 (i32.add (i32.add (i32.add (call $sig1 (get_local $w14)) (get_local $w9)) (call $sig0 (get_local $w1)) (get_local $w0))))
@@ -543,14 +589,14 @@
     ;; (i32.store (i32.const 544) (get_local $w63))
 
     ;; load previous hash state
-    (set_local $a (i32.load offset=0 (get_local $mem)))
-    (set_local $b (i32.load offset=4 (get_local $mem)))
-    (set_local $c (i32.load offset=8 (get_local $mem)))
-    (set_local $d (i32.load offset=12 (get_local $mem)))
-    (set_local $e (i32.load offset=16 (get_local $mem)))
-    (set_local $f (i32.load offset=20 (get_local $mem)))
-    (set_local $g (i32.load offset=24 (get_local $mem)))
-    (set_local $h (i32.load offset=28 (get_local $mem)))
+    (set_local $a (i32.load offset=0 (i32.const 0)))
+    (set_local $b (i32.load offset=4 (i32.const 0)))
+    (set_local $c (i32.load offset=8 (i32.const 0)))
+    (set_local $d (i32.load offset=12 (i32.const 0)))
+    (set_local $e (i32.load offset=16 (i32.const 0)))
+    (set_local $f (i32.load offset=20 (i32.const 0)))
+    (set_local $g (i32.load offset=24 (i32.const 0)))
+    (set_local $h (i32.load offset=28 (i32.const 0)))
     
     ;; ROUND 0
 
@@ -567,6 +613,15 @@
     (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w0)) (i32.load offset=0 (i32.const 32))))
     (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
+    ;; (call $i32.log (get_local $mem)) ;; 
+    ;; (call $i32.log (get_local $ch_res)) ;; 
+    ;; (call $i32.log (get_local $maj_res)) ;;
+    ;; (call $i32.log (get_local $big_sig1_res)) ;;
+    ;; (call $i32.log (get_local $big_sig0_res)) ;;
+    ;; (call $i32.log (get_local $w0))
+    ;; (call $i32.log (i32.load (i32.const 32))) ;;
+    ;; (call $i32.log (get_local $T1))
+    ;; (call $i32.log (get_local $T2)) ;;
     ;; update registers
 
     ;; h <- g
@@ -3188,11 +3243,11 @@
     (set_local $h7 (i32.load offset=24 (i32.const 0)))
     (set_local $h8 (i32.load offset=28 (i32.const 0)))
 
-    (i32.store offset=0  (get_local $mem) (i32.add (get_local $h1) (get_local $a))) ;;(i32.load offset=0  (get_local $mem))))
-    (i32.store offset=4  (get_local $mem) (i32.add (get_local $h2) (get_local $b))) ;;(i32.load offset=4  (get_local $mem))))
-    (i32.store offset=8  (get_local $mem) (i32.add (get_local $h3) (get_local $c))) ;;(i32.load offset=8  (get_local $mem))))
-    (i32.store offset=12 (get_local $mem) (i32.add (get_local $h4) (get_local $d))) ;;(i32.load offset=12 (get_local $mem))))
-    (i32.store offset=16 (get_local $mem) (i32.add (get_local $h5) (get_local $e))) ;;(i32.load offset=16 (get_local $mem))))
-    (i32.store offset=20 (get_local $mem) (i32.add (get_local $h6) (get_local $f))) ;;(i32.load offset=20 (get_local $mem))))
-    (i32.store offset=24 (get_local $mem) (i32.add (get_local $h7) (get_local $g))) ;;(i32.load offset=24 (get_local $mem))))
-    (i32.store offset=28 (get_local $mem) (i32.add (get_local $h8) (get_local $h))))) ;;(i32.load offset=28 (get_local $mem))))))
+    (i32.store offset=0  (i32.const 0) (i32.add (get_local $h1) (get_local $a))) ;;(i32.load offset=0  (get_local $mem))))
+    (i32.store offset=4  (i32.const 0) (i32.add (get_local $h2) (get_local $b))) ;;(i32.load offset=4  (get_local $mem))))
+    (i32.store offset=8  (i32.const 0) (i32.add (get_local $h3) (get_local $c))) ;;(i32.load offset=8  (get_local $mem))))
+    (i32.store offset=12 (i32.const 0) (i32.add (get_local $h4) (get_local $d))) ;;(i32.load offset=12 (get_local $mem))))
+    (i32.store offset=16 (i32.const 0) (i32.add (get_local $h5) (get_local $e))) ;;(i32.load offset=16 (get_local $mem))))
+    (i32.store offset=20 (i32.const 0) (i32.add (get_local $h6) (get_local $f))) ;;(i32.load offset=20 (get_local $mem))))
+    (i32.store offset=24 (i32.const 0) (i32.add (get_local $h7) (get_local $g))) ;;(i32.load offset=24 (get_local $mem))))
+    (i32.store offset=28 (i32.const 0) (i32.add (get_local $h8) (get_local $h))))) ;;(i32.load offset=28 (get_local $mem))))))

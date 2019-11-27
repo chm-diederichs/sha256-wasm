@@ -40,22 +40,25 @@ function Sha256 () {
 
   if (this.pointer + hashLength + wordConstantsLength > wasm.memory.length) wasm.realloc(this.pointer + 312)
   
-  wasm.exports.sha256_init(this.pointer, this.digestLength)
+  wasm.exports.sha256_init(0 , this.digestLength) //(this.pointer, this.digestLength)
 }
 
 Sha256.prototype.update = function (input) {
   let [ inputBuf, length ] = formatInput(input)
-  console.log(inputBuf)
   assert(this.finalized === false, 'Hash instance finalized')
   assert(inputBuf instanceof Uint8Array, 'input must be Uint8Array or Buffer')
 
   if (head + input.length > wasm.memory.length) wasm.realloc(head + input.length)
-  console.log(inputBuf)
   wasm.memory.set(inputBuf, head)
   // console.log(wasm.memory.subarray(this.pointer), head, 'hash state + word constants')
-  console.log(head, head + length)
+
   wasm.exports.sha256_update(288, head, head + length)
-  console.log(hexSlice(wasm.memory, 288, 64))
+  const memSlice = hexSlice(wasm.memory, 0, 32)
+  // console.log('')
+  for (let i = 0; i < memSlice.length; i += 8) {
+    // console.log(memSlice.slice(i, i + 8))
+    // console.log(i / 8)
+  }
   return this
 }
 
@@ -65,7 +68,7 @@ Sha256.prototype.digest = function (enc) {
   this.finalized = true
 
   freeList.push(this.pointer)
-  wasm.exports.sha256_compress(this.pointer)
+  wasm.exports.sha256_compress(288)
   // console.log(wasm.memory.subarray(this.pointer, this.pointer + 32), head, this.pointer)
 
 
@@ -116,7 +119,6 @@ function formatInput (input) {
   let i = 0
 
   for (; i < buf.byteLength / 4; i++) {
-    console.log(buf.readUInt32LE(0))
     inputArray[i] = buf.readUInt32LE(4 * i)
   }
 
