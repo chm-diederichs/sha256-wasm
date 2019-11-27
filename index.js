@@ -34,7 +34,6 @@ function Sha256 () {
   this.finalized = false
   this.digestLength = 32
   this.pointer = freeList.pop()
-  this.pointer = 0
 
   wasm.memory.fill(0, 0, hashLength + wordConstantsLength)
 
@@ -50,9 +49,12 @@ Sha256.prototype.update = function (input) {
 
   if (head + input.length > wasm.memory.length) wasm.realloc(head + input.length)
   wasm.memory.set(inputBuf, head)
+console.log(this.pointer)
+  wasm.exports.sha256_update(this.pointer, head, head + length)
   // console.log(wasm.memory.subarray(this.pointer), head, 'hash state + word constants')
 
-  wasm.exports.sha256_update(288, head, head + length)
+  console.log(length)
+  head += length
   const memSlice = hexSlice(wasm.memory, 0, 32)
   // console.log('')
   for (let i = 0; i < memSlice.length; i += 8) {
@@ -68,6 +70,12 @@ Sha256.prototype.digest = function (enc) {
   this.finalized = true
 
   freeList.push(this.pointer)
+  console.log(hexSlice(wasm.memory, 288, 64))
+
+  wasm.exports.sha256_pad(0)
+  console.log(hexSlice(wasm.memory, 288, 64))
+
+  console.log(hexSlice(wasm.memory, 636, 128))
   wasm.exports.sha256_compress(288)
   // console.log(wasm.memory.subarray(this.pointer, this.pointer + 32), head, this.pointer)
 

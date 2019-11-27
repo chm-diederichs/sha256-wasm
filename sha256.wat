@@ -123,7 +123,13 @@
     (i32.store offset=336 (get_local $ptr) (i32.const 0))
     (i32.store offset=340 (get_local $ptr) (i32.const 0))
     (i32.store offset=344 (get_local $ptr) (i32.const 0))
-    (i32.store offset=348 (get_local $ptr) (i32.const 0)))
+    (i32.store offset=348 (get_local $ptr) (i32.const 0))
+
+    ;; keep track of input start byte 352
+    (i32.store offset=352 (get_local $ptr) (i32.const 0xffffffff))
+    
+    ;; keep track of input end byte 356
+    (i32.store offset=356 (get_local $ptr) (i32.const 0)))
 
 
   ;; Define bit-mixing functions
@@ -233,3021 +239,2928 @@
 
   ;;   (i32.store (get_local $c) (get_local $i))
   ;; )
-  (func $sha256_update (export "sha256_update") (param $ctx i32) (param $input i32) (param $input_end i32)
-    (local $i i32)
-    (local $input_length i64)
-    (local $block_end i32)
+    (func $sha256_update (export "sha256_update") (param $ctx i32) (param $input i32) (param $input_end i32)
+        (local $i i32)
+        (local $input_length i64)
+        (local $block_end i32)
 
-    (set_local $input_length (i64.extend_u/i32 (i32.mul (i32.sub (get_local $input_end) (get_local $input)) (i32.const 8))))
-
-    (i32.store8 (get_local $input_end) (i32.const 0x80))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-    ;; (set_local $i (i32.wrap/i64 (get_local $input_length)))
-
-    (block $pad_end
-        (loop $pad
-            (br_if $pad_end (i32.eq (i32.rem_u (i32.sub (get_local $input_end) (get_local $input)) (i32.const 64)) (i32.const 56)))
-            (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-
-            (i32.store8 (get_local $input_end) (i32.const 0))
-            (br $pad)
+        ;; only store input start for the first input
+        (if (i32.eq (i32.load offset=64 (get_local $ctx)) (i32.const 0xffffffff))
+            (then (i32.store offset=64 (get_local $ctx) (get_local $input)))
         )
-    )    
 
+        (i32.store offset=68 (get_local $ctx) (get_local $input_end))
 
-    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 56)))
-    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 48)))
-    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 40)))
-    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 32)))
-    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 24)))
-    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 16)))
-    ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 8)))
+        ;; (i32.store (get_local $input_end) (i32.wrap/i64 (i64.shr_u (get_local $input_length) (i64.const 32))))
+        ;; (i32.store offset=4 (get_local $input_end) (i32.wrap/i64 (get_local $input_length)))
+        ;; (set_local $input_end (i32.add (get_local $input_end) (i32.const 8)))
+        ;; (call $i32.log (i32.load (i32.sub (get_local $input_end) (i32.const 4))))
+        ;; (call $i32.log (get_local $input))
+        ;; (call $i64.log (get_local $input_length))
 
-    ;; (call $i64.log (get_local $input_length))
-
-    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 56)))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
- 
-    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 48)))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-
-    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 40)))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-
-    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 32)))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-
-    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 24)))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-
-    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 16)))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-   
-    (i64.store8 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 8)))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-
-    (i64.store8 (get_local $input_end) (get_local $input_length))
-    (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
-
-
-    ;; (i32.store (get_local $input_end) (i32.wrap/i64 (i64.shr_u (get_local $input_length) (i64.const 32))))
-    ;; (i32.store offset=4 (get_local $input_end) (i32.wrap/i64 (get_local $input_length)))
-    ;; (set_local $input_end (i32.add (get_local $input_end) (i32.const 8)))
-    ;; (call $i32.log (i32.load (i32.sub (get_local $input_end) (i32.const 4))))
-    ;; (call $i32.log (get_local $input))
-    ;; (call $i64.log (get_local $input_length))
-
-    
-    (set_local $i (i32.const 3))
-    (set_local $block_end (i32.const 67))
-
-    (block $end
-        (loop $start
-            (br_if $end (i32.eq (get_local $input) (get_local $input_end)))
-            
-            (if (i32.eq (get_local $i) (i32.const 67))
-                (then
-                    (set_local $i (i32.const 3))
-                    (set_local $block_end (get_local $block_end) (i32.const 64))
-                    (call $sha256_compress (get_local $ctx))
-                    (br $start)
-                )
-            )
         
-            ;; (call $i32.log (i32.load8_u (get_local $input)))
-            (i32.store8 offset=32 (i32.add (get_local $ctx) (get_local $i)) (i32.load8_u (get_local $input)))
-            ;; (call $i32.log (i32.load8_u (i32.add (get_local $ctx) (get_local $i))))
+        (set_local $i (i32.const 3))
+        (set_local $block_end (i32.const 67))
 
-            (set_local $i (i32.sub (get_local $i) (i32.const 1)))
-            (set_local $input (i32.add (get_local $input) (i32.const 1)))
-
-            ;; int32.load expects little endian, increment by 4 then successively decrement by 1 to load each 4 bytes of input
-            (if (i32.eq (i32.rem_u (get_local $i) (i32.const 4)) (i32.const 3))
-                (then
-                    (set_local $i (i32.add (get_local $i) (i32.const 8)))
+        (block $end
+            (loop $start
+                (br_if $end (i32.eq (get_local $input) (get_local $input_end)))
+                
+                (if (i32.eq (get_local $i) (get_local $block_end))
+                    (then
+                        (set_local $block_end (i32.add (get_local $block_end) (i32.const 64)))
+                        (call $sha256_compress (get_local $ctx))
+                        (call $i64.log (i64.const 0))
+                        (br $start)
+                    )
                 )
-            )
 
-            (br $start)
-        )   
+            
+                ;; (call $i32.log (i32.add (get_local $ctx) (get_local $i)))
+                (call $i32.log (get_local $i))
+                ;; (call $i32.log (i32.load8_u (get_local $input)))
+                (i32.store8 (i32.add (get_local $ctx) (i32.rem_u (get_local $i) (i32.const 64))) (i32.load8_u (get_local $input)))
+                ;; (call $i32.log (i32.load8_u (i32.add (get_local $ctx) (get_local $i))))
+                ;; (call $i32.log (i32.load8_u (i32.add (get_local $ctx) (get_local $i))))
+
+                (call $i32.log (i32.load8_u (i32.add (get_local $ctx) (get_local $i))))
+                (set_local $i (i32.sub (get_local $i) (i32.const 1)))
+                (set_local $input (i32.add (get_local $input) (i32.const 1)))
+
+                ;; int32.load expects little endian, increment by 4 then successively decrement by 1 to load each 4 bytes of input
+                (if (i32.eq (i32.rem_u (get_local $i) (i32.const 4)) (i32.const 3))
+                    (then
+                        (set_local $i (i32.add (get_local $i) (i32.const 8)))
+                    )
+                )
+
+                (br $start)
+            )   
+        )
+
+        ;; pad with 0b10000000 === 0x80
+        ;; (call $i32.log (i32.add (get_local $ctx) (get_local $i)))
+        ;; (call $i32.log (i32.rem_u (get_local $i) (i32.const 4)))
+        ;; (call $i32.log (i32.sub (i32.add (get_local $ctx) (get_local $i)) (i32.rem_u (get_local $i) (i32.const 4))))
+
+        ;; ;; endian converter
+        ;; (block $length_end
+        ;;     (loop $length
+        ;;         (br_if $length_end (i32.eq (get_local $ctr) (i32.const 8)))
+        ;;         (call $i32.log (get_local $ctx))
+        ;;         (call $i32.log (i32.add (i32.add (get_local $ctx) (get_local $i) (i32.sub (i32.const 8) (get_local $ctr)))))
+        ;;         (call $i64.log (i64.shr_u (get_local $input_length) (i64.extend_u/i32 (i32.mul (get_local $ctr) (i32.const 8)))))
+
+        ;;         (i64.store8 (i32.add (i32.add (get_local $ctx) (get_local $i)) (i32.sub (i32.const 7) (get_local $ctr)))
+        ;;                     (i64.shr_u (get_local $input_length) (i64.extend_u/i32 (i32.mul (get_local $ctr) (i32.const 8)))))
+
+        ;;         (set_local $ctr (i32.add (get_local $ctr) (i32.const 1)))
+
+        ;;         (call $i32.log (i32.load8_u (i32.add (i32.add (get_local $ctx) (get_local $i)) (i32.sub (i32.const 8) (get_local $ctr)))))
+        ;;         (br $length)
+        ;;     )
+        ;; )
     )
 
-    ;; pad with 0b10000000 === 0x80
-    ;; (call $i32.log (i32.add (get_local $ctx) (get_local $i)))
-    ;; (call $i32.log (i32.rem_u (get_local $i) (i32.const 4)))
-    ;; (call $i32.log (i32.sub (i32.add (get_local $ctx) (get_local $i)) (i32.rem_u (get_local $i) (i32.const 4))))
-
-    (set_local $i (i32.add (get_local $i) (i32.const 1)))
-
-
-    ;; ;; endian converter
-    ;; (block $length_end
-    ;;     (loop $length
-    ;;         (br_if $length_end (i32.eq (get_local $ctr) (i32.const 8)))
-    ;;         (call $i32.log (get_local $ctx))
-    ;;         (call $i32.log (i32.add (i32.add (get_local $ctx) (get_local $i) (i32.sub (i32.const 8) (get_local $ctr)))))
-    ;;         (call $i64.log (i64.shr_u (get_local $input_length) (i64.extend_u/i32 (i32.mul (get_local $ctr) (i32.const 8)))))
-
-    ;;         (i64.store8 (i32.add (i32.add (get_local $ctx) (get_local $i)) (i32.sub (i32.const 7) (get_local $ctr)))
-    ;;                     (i64.shr_u (get_local $input_length) (i64.extend_u/i32 (i32.mul (get_local $ctr) (i32.const 8)))))
-
-    ;;         (set_local $ctr (i32.add (get_local $ctr) (i32.const 1)))
-
-    ;;         (call $i32.log (i32.load8_u (i32.add (i32.add (get_local $ctx) (get_local $i)) (i32.sub (i32.const 8) (get_local $ctr)))))
-    ;;         (br $length)
-    ;;     )
-    ;; )
-  )
-                                                                        
-  (func $sha256_compress (export "sha256_compress") (param $mem i32)
-    (local $h1 i32)
-    (local $h2 i32)
-    (local $h3 i32)
-    (local $h4 i32)
-    (local $h5 i32)
-    (local $h6 i32)
-    (local $h7 i32)
-    (local $h8 i32)
-
-
-    ;; registers
-    (local $a i32)
-    (local $b i32)
-    (local $c i32)
-    (local $d i32)
-    (local $e i32)
-    (local $f i32)
-    (local $g i32)
-    (local $h i32)
-
-    ;; precomputed values
-    (local $T1 i32)
-    (local $T2 i32)
-
-    (local $ch_res i32)
-    (local $maj_res i32)
-    (local $big_sig0_res i32)
-    (local $big_sig1_res i32)
-;; 380
-    ;; expanded message schedule
-    (local $w0 i32) 
-    (local $w1 i32) 
-    (local $w2 i32) 
-    (local $w3 i32) 
-    (local $w4 i32) 
-    (local $w5 i32) 
-    (local $w6 i32) 
-    (local $w7 i32) 
-    (local $w8 i32) 
-    (local $w9 i32) 
-    (local $w10 i32)
-    (local $w11 i32)
-    (local $w12 i32)
-    (local $w13 i32)
-    (local $w14 i32)
-    (local $w15 i32)
-    (local $w16 i32)
-    (local $w17 i32)
-    (local $w18 i32)
-    (local $w19 i32)
-    (local $w20 i32)
-    (local $w21 i32)
-    (local $w22 i32)
-    (local $w23 i32)
-    (local $w24 i32)
-    (local $w25 i32)
-    (local $w26 i32)
-    (local $w27 i32)
-    (local $w28 i32)
-    (local $w29 i32)
-    (local $w30 i32)
-    (local $w31 i32)
-    (local $w32 i32)
-    (local $w33 i32)
-    (local $w34 i32)
-    (local $w35 i32)
-    (local $w36 i32)
-    (local $w37 i32)
-    (local $w38 i32)
-    (local $w39 i32)
-    (local $w40 i32)
-    (local $w41 i32)
-    (local $w42 i32)
-    (local $w43 i32)
-    (local $w44 i32)
-    (local $w45 i32)
-    (local $w46 i32)
-    (local $w47 i32)
-    (local $w48 i32)
-    (local $w49 i32)
-    (local $w50 i32)
-    (local $w51 i32)
-    (local $w52 i32)
-    (local $w53 i32)
-    (local $w54 i32)
-    (local $w55 i32)
-    (local $w56 i32)
-    (local $w57 i32)
-    (local $w58 i32)
-    (local $w59 i32)
-    (local $w60 i32)
-    (local $w61 i32)
-    (local $w62 i32)
-    (local $w63 i32)
-;; 636
-    ;; message loaded
-    (set_local $w0 (i32.load offset=32 (get_local $mem)))
-    (set_local $w1 (i32.load offset=36 (get_local $mem)))
-    (set_local $w2 (i32.load offset=40 (get_local $mem)))
-    (set_local $w3 (i32.load offset=44 (get_local $mem)))
-    (set_local $w4 (i32.load offset=48 (get_local $mem)))
-    (set_local $w5 (i32.load offset=52 (get_local $mem)))
-    (set_local $w6 (i32.load offset=56 (get_local $mem)))
-    (set_local $w7 (i32.load offset=60 (get_local $mem)))
-    (set_local $w8 (i32.load offset=64 (get_local $mem)))
-    (set_local $w9 (i32.load offset=68 (get_local $mem)))
-    (set_local $w10 (i32.load offset=72 (get_local $mem)))
-    (set_local $w11 (i32.load offset=76 (get_local $mem)))
-    (set_local $w12 (i32.load offset=80 (get_local $mem)))
-    (set_local $w13 (i32.load offset=84 (get_local $mem)))
-    (set_local $w14 (i32.load offset=88 (get_local $mem)))
-    (set_local $w15 (i32.load offset=92 (get_local $mem)))
-    
-    ;; words 16-63 are defined by w[j] <- sig1(w[j-2]) + w[j-7] + sig0(w[j-15]) + w[j-16]
-    (set_local $w16 (i32.add (i32.add (i32.add (call $sig1 (get_local $w14)) (get_local $w9)) (call $sig0 (get_local $w1)) (get_local $w0))))
-    (set_local $w17 (i32.add (i32.add (i32.add (call $sig1 (get_local $w15)) (get_local $w10)) (call $sig0 (get_local $w2)) (get_local $w1))))
-    (set_local $w18 (i32.add (i32.add (i32.add (call $sig1 (get_local $w16)) (get_local $w11)) (call $sig0 (get_local $w3)) (get_local $w2))))
-    (set_local $w19 (i32.add (i32.add (i32.add (call $sig1 (get_local $w17)) (get_local $w12)) (call $sig0 (get_local $w4)) (get_local $w3))))
-    (set_local $w20 (i32.add (i32.add (i32.add (call $sig1 (get_local $w18)) (get_local $w13)) (call $sig0 (get_local $w5)) (get_local $w4))))
-    (set_local $w21 (i32.add (i32.add (i32.add (call $sig1 (get_local $w19)) (get_local $w14)) (call $sig0 (get_local $w6)) (get_local $w5))))
-    (set_local $w22 (i32.add (i32.add (i32.add (call $sig1 (get_local $w20)) (get_local $w15)) (call $sig0 (get_local $w7)) (get_local $w6))))
-    (set_local $w23 (i32.add (i32.add (i32.add (call $sig1 (get_local $w21)) (get_local $w16)) (call $sig0 (get_local $w8)) (get_local $w7))))
-    (set_local $w24 (i32.add (i32.add (i32.add (call $sig1 (get_local $w22)) (get_local $w17)) (call $sig0 (get_local $w9)) (get_local $w8))))
-    (set_local $w25 (i32.add (i32.add (i32.add (call $sig1 (get_local $w23)) (get_local $w18)) (call $sig0 (get_local $w10)) (get_local $w9))))
-    (set_local $w26 (i32.add (i32.add (i32.add (call $sig1 (get_local $w24)) (get_local $w19)) (call $sig0 (get_local $w11)) (get_local $w10))))
-    (set_local $w27 (i32.add (i32.add (i32.add (call $sig1 (get_local $w25)) (get_local $w20)) (call $sig0 (get_local $w12)) (get_local $w11))))
-    (set_local $w28 (i32.add (i32.add (i32.add (call $sig1 (get_local $w26)) (get_local $w21)) (call $sig0 (get_local $w13)) (get_local $w12))))
-    (set_local $w29 (i32.add (i32.add (i32.add (call $sig1 (get_local $w27)) (get_local $w22)) (call $sig0 (get_local $w14)) (get_local $w13))))
-    (set_local $w30 (i32.add (i32.add (i32.add (call $sig1 (get_local $w28)) (get_local $w23)) (call $sig0 (get_local $w15)) (get_local $w14))))
-    (set_local $w31 (i32.add (i32.add (i32.add (call $sig1 (get_local $w29)) (get_local $w24)) (call $sig0 (get_local $w16)) (get_local $w15))))
-    (set_local $w32 (i32.add (i32.add (i32.add (call $sig1 (get_local $w30)) (get_local $w25)) (call $sig0 (get_local $w17)) (get_local $w16))))
-    (set_local $w33 (i32.add (i32.add (i32.add (call $sig1 (get_local $w31)) (get_local $w26)) (call $sig0 (get_local $w18)) (get_local $w17))))
-    (set_local $w34 (i32.add (i32.add (i32.add (call $sig1 (get_local $w32)) (get_local $w27)) (call $sig0 (get_local $w19)) (get_local $w18))))
-    (set_local $w35 (i32.add (i32.add (i32.add (call $sig1 (get_local $w33)) (get_local $w28)) (call $sig0 (get_local $w20)) (get_local $w19))))
-    (set_local $w36 (i32.add (i32.add (i32.add (call $sig1 (get_local $w34)) (get_local $w29)) (call $sig0 (get_local $w21)) (get_local $w20))))
-    (set_local $w37 (i32.add (i32.add (i32.add (call $sig1 (get_local $w35)) (get_local $w30)) (call $sig0 (get_local $w22)) (get_local $w21))))
-    (set_local $w38 (i32.add (i32.add (i32.add (call $sig1 (get_local $w36)) (get_local $w31)) (call $sig0 (get_local $w23)) (get_local $w22))))
-    (set_local $w39 (i32.add (i32.add (i32.add (call $sig1 (get_local $w37)) (get_local $w32)) (call $sig0 (get_local $w24)) (get_local $w23))))
-    (set_local $w40 (i32.add (i32.add (i32.add (call $sig1 (get_local $w38)) (get_local $w33)) (call $sig0 (get_local $w25)) (get_local $w24))))
-    (set_local $w41 (i32.add (i32.add (i32.add (call $sig1 (get_local $w39)) (get_local $w34)) (call $sig0 (get_local $w26)) (get_local $w25))))
-    (set_local $w42 (i32.add (i32.add (i32.add (call $sig1 (get_local $w40)) (get_local $w35)) (call $sig0 (get_local $w27)) (get_local $w26))))
-    (set_local $w43 (i32.add (i32.add (i32.add (call $sig1 (get_local $w41)) (get_local $w36)) (call $sig0 (get_local $w28)) (get_local $w27))))
-    (set_local $w44 (i32.add (i32.add (i32.add (call $sig1 (get_local $w42)) (get_local $w37)) (call $sig0 (get_local $w29)) (get_local $w28))))
-    (set_local $w45 (i32.add (i32.add (i32.add (call $sig1 (get_local $w43)) (get_local $w38)) (call $sig0 (get_local $w30)) (get_local $w29))))
-    (set_local $w46 (i32.add (i32.add (i32.add (call $sig1 (get_local $w44)) (get_local $w39)) (call $sig0 (get_local $w31)) (get_local $w30))))
-    (set_local $w47 (i32.add (i32.add (i32.add (call $sig1 (get_local $w45)) (get_local $w40)) (call $sig0 (get_local $w32)) (get_local $w31))))
-    (set_local $w48 (i32.add (i32.add (i32.add (call $sig1 (get_local $w46)) (get_local $w41)) (call $sig0 (get_local $w33)) (get_local $w32))))
-    (set_local $w49 (i32.add (i32.add (i32.add (call $sig1 (get_local $w47)) (get_local $w42)) (call $sig0 (get_local $w34)) (get_local $w33))))
-    (set_local $w50 (i32.add (i32.add (i32.add (call $sig1 (get_local $w48)) (get_local $w43)) (call $sig0 (get_local $w35)) (get_local $w34))))
-    (set_local $w51 (i32.add (i32.add (i32.add (call $sig1 (get_local $w49)) (get_local $w44)) (call $sig0 (get_local $w36)) (get_local $w35))))
-    (set_local $w52 (i32.add (i32.add (i32.add (call $sig1 (get_local $w50)) (get_local $w45)) (call $sig0 (get_local $w37)) (get_local $w36))))
-    (set_local $w53 (i32.add (i32.add (i32.add (call $sig1 (get_local $w51)) (get_local $w46)) (call $sig0 (get_local $w38)) (get_local $w37))))
-    (set_local $w54 (i32.add (i32.add (i32.add (call $sig1 (get_local $w52)) (get_local $w47)) (call $sig0 (get_local $w39)) (get_local $w38))))
-    (set_local $w55 (i32.add (i32.add (i32.add (call $sig1 (get_local $w53)) (get_local $w48)) (call $sig0 (get_local $w40)) (get_local $w39))))
-    (set_local $w56 (i32.add (i32.add (i32.add (call $sig1 (get_local $w54)) (get_local $w49)) (call $sig0 (get_local $w41)) (get_local $w40))))
-    (set_local $w57 (i32.add (i32.add (i32.add (call $sig1 (get_local $w55)) (get_local $w50)) (call $sig0 (get_local $w42)) (get_local $w41))))
-    (set_local $w58 (i32.add (i32.add (i32.add (call $sig1 (get_local $w56)) (get_local $w51)) (call $sig0 (get_local $w43)) (get_local $w42))))
-    (set_local $w59 (i32.add (i32.add (i32.add (call $sig1 (get_local $w57)) (get_local $w52)) (call $sig0 (get_local $w44)) (get_local $w43))))
-    (set_local $w60 (i32.add (i32.add (i32.add (call $sig1 (get_local $w58)) (get_local $w53)) (call $sig0 (get_local $w45)) (get_local $w44))))
-    (set_local $w61 (i32.add (i32.add (i32.add (call $sig1 (get_local $w59)) (get_local $w54)) (call $sig0 (get_local $w46)) (get_local $w45))))
-    (set_local $w62 (i32.add (i32.add (i32.add (call $sig1 (get_local $w60)) (get_local $w55)) (call $sig0 (get_local $w47)) (get_local $w46))))
-    (set_local $w63 (i32.add (i32.add (i32.add (call $sig1 (get_local $w61)) (get_local $w56)) (call $sig0 (get_local $w48)) (get_local $w47))))
-
-    ;; (i32.store (i32.const 292) (get_local $w0))
-    ;; (i32.store (i32.const 296) (get_local $w1))
-    ;; (i32.store (i32.const 300) (get_local $w2))
-    ;; (i32.store (i32.const 304) (get_local $w3))
-    ;; (i32.store (i32.const 308) (get_local $w4))
-    ;; (i32.store (i32.const 312) (get_local $w5))
-    ;; (i32.store (i32.const 316) (get_local $w6))
-    ;; (i32.store (i32.const 320) (get_local $w7))
-    ;; (i32.store (i32.const 324) (get_local $w8))
-    ;; (i32.store (i32.const 328) (get_local $w9))
-    ;; (i32.store (i32.const 332) (get_local $w10))
-    ;; (i32.store (i32.const 336) (get_local $w11))
-    ;; (i32.store (i32.const 340) (get_local $w12))
-    ;; (i32.store (i32.const 344) (get_local $w13))
-    ;; (i32.store (i32.const 348) (get_local $w14))
-    ;; (i32.store (i32.const 352) (get_local $w15))
-    ;; (i32.store (i32.const 356) (get_local $w16))
-    ;; (i32.store (i32.const 360) (get_local $w17))
-    ;; (i32.store (i32.const 364) (get_local $w18))
-    ;; (i32.store (i32.const 368) (get_local $w19))
-    ;; (i32.store (i32.const 372) (get_local $w20))
-    ;; (i32.store (i32.const 376) (get_local $w21))
-    ;; (i32.store (i32.const 380) (get_local $w22))
-    ;; (i32.store (i32.const 384) (get_local $w23))
-    ;; (i32.store (i32.const 388) (get_local $w24))
-    ;; (i32.store (i32.const 392) (get_local $w25))
-    ;; (i32.store (i32.const 396) (get_local $w26))
-    ;; (i32.store (i32.const 400) (get_local $w27))
-    ;; (i32.store (i32.const 404) (get_local $w28))
-    ;; (i32.store (i32.const 408) (get_local $w29))
-    ;; (i32.store (i32.const 412) (get_local $w30))
-    ;; (i32.store (i32.const 416) (get_local $w31))
-    ;; (i32.store (i32.const 420) (get_local $w32))
-    ;; (i32.store (i32.const 424) (get_local $w33))
-    ;; (i32.store (i32.const 428) (get_local $w34))
-    ;; (i32.store (i32.const 432) (get_local $w35))
-    ;; (i32.store (i32.const 436) (get_local $w36))
-    ;; (i32.store (i32.const 440) (get_local $w37))
-    ;; (i32.store (i32.const 444) (get_local $w38))
-    ;; (i32.store (i32.const 448) (get_local $w39))
-    ;; (i32.store (i32.const 452) (get_local $w40))
-    ;; (i32.store (i32.const 456) (get_local $w41))
-    ;; (i32.store (i32.const 460) (get_local $w42))
-    ;; (i32.store (i32.const 464) (get_local $w43))
-    ;; (i32.store (i32.const 468) (get_local $w44))
-    ;; (i32.store (i32.const 472) (get_local $w45))
-    ;; (i32.store (i32.const 476) (get_local $w46))
-    ;; (i32.store (i32.const 480) (get_local $w47))
-    ;; (i32.store (i32.const 484) (get_local $w48))
-    ;; (i32.store (i32.const 488) (get_local $w49))
-    ;; (i32.store (i32.const 492) (get_local $w50))
-    ;; (i32.store (i32.const 496) (get_local $w51))
-    ;; (i32.store (i32.const 500) (get_local $w52))
-    ;; (i32.store (i32.const 504) (get_local $w53))
-    ;; (i32.store (i32.const 508) (get_local $w54))
-    ;; (i32.store (i32.const 512) (get_local $w55))
-    ;; (i32.store (i32.const 516) (get_local $w56))
-    ;; (i32.store (i32.const 520) (get_local $w57))
-    ;; (i32.store (i32.const 524) (get_local $w58))
-    ;; (i32.store (i32.const 528) (get_local $w59))
-    ;; (i32.store (i32.const 532) (get_local $w60))
-    ;; (i32.store (i32.const 536) (get_local $w61))
-    ;; (i32.store (i32.const 540) (get_local $w62))
-    ;; (i32.store (i32.const 544) (get_local $w63))
-
-    ;; load previous hash state
-    (set_local $a (i32.load offset=0 (i32.const 0)))
-    (set_local $b (i32.load offset=4 (i32.const 0)))
-    (set_local $c (i32.load offset=8 (i32.const 0)))
-    (set_local $d (i32.load offset=12 (i32.const 0)))
-    (set_local $e (i32.load offset=16 (i32.const 0)))
-    (set_local $f (i32.load offset=20 (i32.const 0)))
-    (set_local $g (i32.load offset=24 (i32.const 0)))
-    (set_local $h (i32.load offset=28 (i32.const 0)))
-    
-    ;; ROUND 0
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K0 + W0
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w0)) (i32.load offset=0 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; (call $i32.log (get_local $mem)) ;; 
-    ;; (call $i32.log (get_local $ch_res)) ;; 
-    ;; (call $i32.log (get_local $maj_res)) ;;
-    ;; (call $i32.log (get_local $big_sig1_res)) ;;
-    ;; (call $i32.log (get_local $big_sig0_res)) ;;
-    ;; (call $i32.log (get_local $w0))
-    ;; (call $i32.log (i32.load (i32.const 32))) ;;
-    ;; (call $i32.log (get_local $T1))
-    ;; (call $i32.log (get_local $T2)) ;;
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
-
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
-
-    ;; d <- c
-    (set_local $d (get_local $c))  
-
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
-
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    ;; ROUND 1
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K1 + W1
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w1)) (i32.load offset=4 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
-
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
-
-    ;; d <- c
-    (set_local $d (get_local $c))  
-
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
-
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    ;; ROUND 2
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K2 + W2
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w2)) (i32.load offset=8 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
-
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
-
-    ;; d <- c
-    (set_local $d (get_local $c))  
-
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
-
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    ;; ROUND 3
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K3 + W3
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w3)) (i32.load offset=12 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
-
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
-
-    ;; d <- c
-    (set_local $d (get_local $c))  
-
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
-
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    ;; ROUND 4
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K4 + W4
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w4)) (i32.load offset=16 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
-
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
-
-    ;; d <- c
-    (set_local $d (get_local $c))  
-
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
-
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    ;; ROUND 5
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K5 + W5
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w5)) (i32.load offset=20 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
-
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
-
-    ;; d <- c
-    (set_local $d (get_local $c))  
-
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
-
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    ;; ROUND 6
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K6 + W6
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w6)) (i32.load offset=24 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
-
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
-
-    ;; d <- c
-    (set_local $d (get_local $c))  
-
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
-
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    ;; ROUND 7
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K7 + W7
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w7)) (i32.load offset=28 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
-
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
-
-    ;; d <- c
-    (set_local $d (get_local $c))  
-
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
-
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
-    ;; ROUND 8
-
-    ;; precompute intermediate values
-
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K8 + W8
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
-
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
-
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w8)) (i32.load offset=32 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
-
-    ;; update registers
-
-    ;; h <- g
-    (set_local $h (get_local $g))
-
-    ;; g <- f
-    (set_local $g (get_local $f))  
-
-    ;; f <- e
-    (set_local $f (get_local $e))  
+    (func $sha256_pad (export "sha256_pad") (param $mem i32) (param $ctx i32)
+        (local $input_length i64)
+        (local $input_end i32)
+        (local $input_start i32)
+        (local $input i32)
+
+        (set_local $input_start (i32.load offset=352 (get_local $mem)))
+        (set_local $input_end (i32.load offset=356 (get_local $mem)))
+
+        (call $i32.log (get_local $input_start))
+
+        (set_local $input (get_local $input_start))
+        (set_local $input_length 
+            (i64.extend_u/i32 
+                (i32.mul 
+                    (i32.sub (get_local $input_end) (get_local $input)) 
+                    (i32.const 8))))
+
+        (i32.store8 (get_local $input_end) (i32.const 0x80))
+        (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+        ;; (set_local $i (i32.wrap/i64 (get_local $input_length)))
+
+        (block $pad_end
+            (loop $pad
+                (br_if $pad_end (i32.eq (i32.rem_u (i32.sub (get_local $input_end) (get_local $input)) (i32.const 64)) (i32.const 56)))
+                (set_local $input_end (i32.add (get_local $input_end) (i32.const 1)))
+
+                (i32.store8 (get_local $input_end) (i32.const 0))
+                (br $pad)
+            )
+        )
+
+        ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 56)))
+        ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 48)))
+        ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 40)))
+        ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 32)))
+        ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 24)))
+        ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 16)))
+        ;; (call $i64.log (i64.shr_u (get_local $input_length) (i64.const 8)))
+
+        ;; (call $i64.log (get_local $input_length))
+
+        (i64.store8 offset=0 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 56)))
+        (i64.store8 offset=1 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 48)))
+        (i64.store8 offset=2 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 40)))
+        (i64.store8 offset=3 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 32)))
+        (i64.store8 offset=4 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 24)))
+        (i64.store8 offset=5 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 16)))
+        (i64.store8 offset=6 (get_local $input_end) (i64.shr_u (get_local $input_length) (i64.const 8)))
+        (i64.store8 offset=7 (get_local $input_end) (get_local $input_length))
+
+        (set_local $input_end (i32.add (get_local $input_end) (i32.const 8)))
+        ;; (call $i32.log (i32.add (i32.const 288) (i32.sub (get_local $input_start) (i32.const 636))))
+        ;; (call $i32.log (i32.load8_u (i32.add (i32.const 288) (i32.sub (get_local $input_start) (i32.const 634)))))
+        ;; (call $i32.log (i32.load8_u (i32.add (i32.const 288) (i32.sub (get_local $input_start) (i32.const 635)))))
+        ;; (call $i32.log (i32.load8_u (i32.add (i32.const 288) (i32.sub (get_local $input_start) (i32.const 636)))))
+        ;; (call $i32.log (i32.load8_u (i32.add (i32.const 288) (i32.sub (get_local $input_start) (i32.const 637)))))
+        ;; (call $i32.log (i32.load8_u (i32.add (i32.const 288) (i32.sub (get_local $input_start) (i32.const 638)))))
+
+        (call $sha256_update (i32.const 288) (get_local $input_start) (get_local $input_end))
+    )
+
+                                                
+    (func $sha256_compress (export "sha256_compress") (param $mem i32)
+        (local $h1 i32)
+        (local $h2 i32)
+        (local $h3 i32)
+        (local $h4 i32)
+        (local $h5 i32)
+        (local $h6 i32)
+        (local $h7 i32)
+        (local $h8 i32)
+
+
+        ;; registers
+        (local $a i32)
+        (local $b i32)
+        (local $c i32)
+        (local $d i32)
+        (local $e i32)
+        (local $f i32)
+        (local $g i32)
+        (local $h i32)
+
+        ;; precomputed values
+        (local $T1 i32)
+        (local $T2 i32)
+
+        (local $ch_res i32)
+        (local $maj_res i32)
+        (local $big_sig0_res i32)
+        (local $big_sig1_res i32)
+    ;; 380
+        ;; expanded message schedule
+        (local $w0 i32)  (local $w1 i32)  (local $w2 i32)  (local $w3 i32)  
+        (local $w4 i32)  (local $w5 i32)  (local $w6 i32)  (local $w7 i32) 
+        (local $w8 i32)  (local $w9 i32)  (local $w10 i32) (local $w11 i32) 
+        (local $w12 i32) (local $w13 i32) (local $w14 i32) (local $w15 i32)
+        (local $w16 i32) (local $w17 i32) (local $w18 i32) (local $w19 i32) 
+        (local $w20 i32) (local $w21 i32) (local $w22 i32) (local $w23 i32)
+        (local $w24 i32) (local $w25 i32) (local $w26 i32) (local $w27 i32) 
+        (local $w28 i32) (local $w29 i32) (local $w30 i32) (local $w31 i32)
+        (local $w32 i32) (local $w33 i32) (local $w34 i32) (local $w35 i32) 
+        (local $w36 i32) (local $w37 i32) (local $w38 i32) (local $w39 i32)
+        (local $w40 i32) (local $w41 i32) (local $w42 i32) (local $w43 i32) 
+        (local $w44 i32) (local $w45 i32) (local $w46 i32) (local $w47 i32)
+        (local $w48 i32) (local $w49 i32) (local $w50 i32) (local $w51 i32) 
+        (local $w52 i32) (local $w53 i32) (local $w54 i32) (local $w55 i32)
+        (local $w56 i32) (local $w57 i32) (local $w58 i32) (local $w59 i32) 
+        (local $w60 i32) (local $w61 i32) (local $w62 i32) (local $w63 i32)
+    ;; 636
+        ;; message loaded
+        (set_local $w0 (i32.load (get_local $mem)))
+        (set_local $w1 (i32.load offset=4 (get_local $mem)))
+        (set_local $w2 (i32.load offset=8 (get_local $mem)))
+        (set_local $w3 (i32.load offset=12 (get_local $mem)))
+        (set_local $w4 (i32.load offset=16 (get_local $mem)))
+        (set_local $w5 (i32.load offset=20 (get_local $mem)))
+        (set_local $w6 (i32.load offset=24 (get_local $mem)))
+        (set_local $w7 (i32.load offset=28 (get_local $mem)))
+        (set_local $w8 (i32.load offset=32 (get_local $mem)))
+        (set_local $w9 (i32.load offset=36 (get_local $mem)))
+        (set_local $w10 (i32.load offset=40 (get_local $mem)))
+        (set_local $w11 (i32.load offset=44 (get_local $mem)))
+        (set_local $w12 (i32.load offset=48 (get_local $mem)))
+        (set_local $w13 (i32.load offset=52 (get_local $mem)))
+        (set_local $w14 (i32.load offset=56 (get_local $mem)))
+        (set_local $w15 (i32.load offset=60 (get_local $mem)))
+        
+        ;; words 16-63 are defined by w[j] <- sig1(w[j-2]) + w[j-7] + sig0(w[j-15]) + w[j-16]
+        (set_local $w16 (i32.add (i32.add (i32.add (call $sig1 (get_local $w14)) (get_local $w9)) (call $sig0 (get_local $w1)) (get_local $w0))))
+        (set_local $w17 (i32.add (i32.add (i32.add (call $sig1 (get_local $w15)) (get_local $w10)) (call $sig0 (get_local $w2)) (get_local $w1))))
+        (set_local $w18 (i32.add (i32.add (i32.add (call $sig1 (get_local $w16)) (get_local $w11)) (call $sig0 (get_local $w3)) (get_local $w2))))
+        (set_local $w19 (i32.add (i32.add (i32.add (call $sig1 (get_local $w17)) (get_local $w12)) (call $sig0 (get_local $w4)) (get_local $w3))))
+        (set_local $w20 (i32.add (i32.add (i32.add (call $sig1 (get_local $w18)) (get_local $w13)) (call $sig0 (get_local $w5)) (get_local $w4))))
+        (set_local $w21 (i32.add (i32.add (i32.add (call $sig1 (get_local $w19)) (get_local $w14)) (call $sig0 (get_local $w6)) (get_local $w5))))
+        (set_local $w22 (i32.add (i32.add (i32.add (call $sig1 (get_local $w20)) (get_local $w15)) (call $sig0 (get_local $w7)) (get_local $w6))))
+        (set_local $w23 (i32.add (i32.add (i32.add (call $sig1 (get_local $w21)) (get_local $w16)) (call $sig0 (get_local $w8)) (get_local $w7))))
+        (set_local $w24 (i32.add (i32.add (i32.add (call $sig1 (get_local $w22)) (get_local $w17)) (call $sig0 (get_local $w9)) (get_local $w8))))
+        (set_local $w25 (i32.add (i32.add (i32.add (call $sig1 (get_local $w23)) (get_local $w18)) (call $sig0 (get_local $w10)) (get_local $w9))))
+        (set_local $w26 (i32.add (i32.add (i32.add (call $sig1 (get_local $w24)) (get_local $w19)) (call $sig0 (get_local $w11)) (get_local $w10))))
+        (set_local $w27 (i32.add (i32.add (i32.add (call $sig1 (get_local $w25)) (get_local $w20)) (call $sig0 (get_local $w12)) (get_local $w11))))
+        (set_local $w28 (i32.add (i32.add (i32.add (call $sig1 (get_local $w26)) (get_local $w21)) (call $sig0 (get_local $w13)) (get_local $w12))))
+        (set_local $w29 (i32.add (i32.add (i32.add (call $sig1 (get_local $w27)) (get_local $w22)) (call $sig0 (get_local $w14)) (get_local $w13))))
+        (set_local $w30 (i32.add (i32.add (i32.add (call $sig1 (get_local $w28)) (get_local $w23)) (call $sig0 (get_local $w15)) (get_local $w14))))
+        (set_local $w31 (i32.add (i32.add (i32.add (call $sig1 (get_local $w29)) (get_local $w24)) (call $sig0 (get_local $w16)) (get_local $w15))))
+        (set_local $w32 (i32.add (i32.add (i32.add (call $sig1 (get_local $w30)) (get_local $w25)) (call $sig0 (get_local $w17)) (get_local $w16))))
+        (set_local $w33 (i32.add (i32.add (i32.add (call $sig1 (get_local $w31)) (get_local $w26)) (call $sig0 (get_local $w18)) (get_local $w17))))
+        (set_local $w34 (i32.add (i32.add (i32.add (call $sig1 (get_local $w32)) (get_local $w27)) (call $sig0 (get_local $w19)) (get_local $w18))))
+        (set_local $w35 (i32.add (i32.add (i32.add (call $sig1 (get_local $w33)) (get_local $w28)) (call $sig0 (get_local $w20)) (get_local $w19))))
+        (set_local $w36 (i32.add (i32.add (i32.add (call $sig1 (get_local $w34)) (get_local $w29)) (call $sig0 (get_local $w21)) (get_local $w20))))
+        (set_local $w37 (i32.add (i32.add (i32.add (call $sig1 (get_local $w35)) (get_local $w30)) (call $sig0 (get_local $w22)) (get_local $w21))))
+        (set_local $w38 (i32.add (i32.add (i32.add (call $sig1 (get_local $w36)) (get_local $w31)) (call $sig0 (get_local $w23)) (get_local $w22))))
+        (set_local $w39 (i32.add (i32.add (i32.add (call $sig1 (get_local $w37)) (get_local $w32)) (call $sig0 (get_local $w24)) (get_local $w23))))
+        (set_local $w40 (i32.add (i32.add (i32.add (call $sig1 (get_local $w38)) (get_local $w33)) (call $sig0 (get_local $w25)) (get_local $w24))))
+        (set_local $w41 (i32.add (i32.add (i32.add (call $sig1 (get_local $w39)) (get_local $w34)) (call $sig0 (get_local $w26)) (get_local $w25))))
+        (set_local $w42 (i32.add (i32.add (i32.add (call $sig1 (get_local $w40)) (get_local $w35)) (call $sig0 (get_local $w27)) (get_local $w26))))
+        (set_local $w43 (i32.add (i32.add (i32.add (call $sig1 (get_local $w41)) (get_local $w36)) (call $sig0 (get_local $w28)) (get_local $w27))))
+        (set_local $w44 (i32.add (i32.add (i32.add (call $sig1 (get_local $w42)) (get_local $w37)) (call $sig0 (get_local $w29)) (get_local $w28))))
+        (set_local $w45 (i32.add (i32.add (i32.add (call $sig1 (get_local $w43)) (get_local $w38)) (call $sig0 (get_local $w30)) (get_local $w29))))
+        (set_local $w46 (i32.add (i32.add (i32.add (call $sig1 (get_local $w44)) (get_local $w39)) (call $sig0 (get_local $w31)) (get_local $w30))))
+        (set_local $w47 (i32.add (i32.add (i32.add (call $sig1 (get_local $w45)) (get_local $w40)) (call $sig0 (get_local $w32)) (get_local $w31))))
+        (set_local $w48 (i32.add (i32.add (i32.add (call $sig1 (get_local $w46)) (get_local $w41)) (call $sig0 (get_local $w33)) (get_local $w32))))
+        (set_local $w49 (i32.add (i32.add (i32.add (call $sig1 (get_local $w47)) (get_local $w42)) (call $sig0 (get_local $w34)) (get_local $w33))))
+        (set_local $w50 (i32.add (i32.add (i32.add (call $sig1 (get_local $w48)) (get_local $w43)) (call $sig0 (get_local $w35)) (get_local $w34))))
+        (set_local $w51 (i32.add (i32.add (i32.add (call $sig1 (get_local $w49)) (get_local $w44)) (call $sig0 (get_local $w36)) (get_local $w35))))
+        (set_local $w52 (i32.add (i32.add (i32.add (call $sig1 (get_local $w50)) (get_local $w45)) (call $sig0 (get_local $w37)) (get_local $w36))))
+        (set_local $w53 (i32.add (i32.add (i32.add (call $sig1 (get_local $w51)) (get_local $w46)) (call $sig0 (get_local $w38)) (get_local $w37))))
+        (set_local $w54 (i32.add (i32.add (i32.add (call $sig1 (get_local $w52)) (get_local $w47)) (call $sig0 (get_local $w39)) (get_local $w38))))
+        (set_local $w55 (i32.add (i32.add (i32.add (call $sig1 (get_local $w53)) (get_local $w48)) (call $sig0 (get_local $w40)) (get_local $w39))))
+        (set_local $w56 (i32.add (i32.add (i32.add (call $sig1 (get_local $w54)) (get_local $w49)) (call $sig0 (get_local $w41)) (get_local $w40))))
+        (set_local $w57 (i32.add (i32.add (i32.add (call $sig1 (get_local $w55)) (get_local $w50)) (call $sig0 (get_local $w42)) (get_local $w41))))
+        (set_local $w58 (i32.add (i32.add (i32.add (call $sig1 (get_local $w56)) (get_local $w51)) (call $sig0 (get_local $w43)) (get_local $w42))))
+        (set_local $w59 (i32.add (i32.add (i32.add (call $sig1 (get_local $w57)) (get_local $w52)) (call $sig0 (get_local $w44)) (get_local $w43))))
+        (set_local $w60 (i32.add (i32.add (i32.add (call $sig1 (get_local $w58)) (get_local $w53)) (call $sig0 (get_local $w45)) (get_local $w44))))
+        (set_local $w61 (i32.add (i32.add (i32.add (call $sig1 (get_local $w59)) (get_local $w54)) (call $sig0 (get_local $w46)) (get_local $w45))))
+        (set_local $w62 (i32.add (i32.add (i32.add (call $sig1 (get_local $w60)) (get_local $w55)) (call $sig0 (get_local $w47)) (get_local $w46))))
+        (set_local $w63 (i32.add (i32.add (i32.add (call $sig1 (get_local $w61)) (get_local $w56)) (call $sig0 (get_local $w48)) (get_local $w47))))
+
+        ;; load previous hash state
+        (set_local $a (i32.load offset=0 (i32.const 0)))
+        (set_local $b (i32.load offset=4 (i32.const 0)))
+        (set_local $c (i32.load offset=8 (i32.const 0)))
+        (set_local $d (i32.load offset=12 (i32.const 0)))
+        (set_local $e (i32.load offset=16 (i32.const 0)))
+        (set_local $f (i32.load offset=20 (i32.const 0)))
+        (set_local $g (i32.load offset=24 (i32.const 0)))
+        (set_local $h (i32.load offset=28 (i32.const 0)))
+        
+        ;; ROUND 0
+
+        ;; precompute intermediate values
+
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K0 + W0
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w0)) (i32.load offset=0 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; (call $i32.log (get_local $mem)) ;; 
+        ;; (call $i32.log (get_local $ch_res)) ;; 
+        ;; (call $i32.log (get_local $maj_res)) ;;
+        ;; (call $i32.log (get_local $big_sig1_res)) ;;
+        ;; (call $i32.log (get_local $big_sig0_res)) ;;
+        ;; (call $i32.log (get_local $w0))
+        ;; (call $i32.log (i32.load (i32.const 32))) ;;
+        ;; (call $i32.log (get_local $T1))
+        ;; (call $i32.log (get_local $T2)) ;;
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
+
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+
+        ;; ROUND 1
+
+        ;; precompute intermediate values
+
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K1 + W1
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w1)) (i32.load offset=4 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
+
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+
+        ;; ROUND 2
+
+        ;; precompute intermediate values
+
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K2 + W2
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w2)) (i32.load offset=8 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
+
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+
+        ;; ROUND 3
+
+        ;; precompute intermediate values
+
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K3 + W3
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w3)) (i32.load offset=12 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; ROUND 4
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
-
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K4 + W4
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 9
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w4)) (i32.load offset=16 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K9 + W9
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w9)) (i32.load offset=36 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 5
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K5 + W5
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 10
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w5)) (i32.load offset=20 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K10 + W10
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w10)) (i32.load offset=40 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 6
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K6 + W6
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 11
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w6)) (i32.load offset=24 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K11 + W11
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w11)) (i32.load offset=44 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 7
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K7 + W7
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 12
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w7)) (i32.load offset=28 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K12 + W12
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w12)) (i32.load offset=48 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 8
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K8 + W8
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 13
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w8)) (i32.load offset=32 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K13 + W13
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w13)) (i32.load offset=52 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 9
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K9 + W9
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 14
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w9)) (i32.load offset=36 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K14 + W14
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w14)) (i32.load offset=56 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 10
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K10 + W10
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 15
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w10)) (i32.load offset=40 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K15 + W15
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w15)) (i32.load offset=60 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 11
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K11 + W11
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 16
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w11)) (i32.load offset=44 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K16 + W16
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w16)) (i32.load offset=64 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 12
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K12 + W12
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 17
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w12)) (i32.load offset=48 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K17 + W17
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w17)) (i32.load offset=68 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 13
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K13 + W13
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 18
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w13)) (i32.load offset=52 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K18 + W18
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w18)) (i32.load offset=72 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 14
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K14 + W14
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 19
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w14)) (i32.load offset=56 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K19 + W19
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w19)) (i32.load offset=76 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 15
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K15 + W15
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 20
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w15)) (i32.load offset=60 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K20 + W20
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w20)) (i32.load offset=80 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 16
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K16 + W16
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 21
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w16)) (i32.load offset=64 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K21 + W21
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w21)) (i32.load offset=84 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 17
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K17 + W17
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 22
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w17)) (i32.load offset=68 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K22 + W22
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w22)) (i32.load offset=88 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 18
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K18 + W18
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 23
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w18)) (i32.load offset=72 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K23 + W23
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w23)) (i32.load offset=92 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 19
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K19 + W19
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 24
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w19)) (i32.load offset=76 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K24 + W24
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w24)) (i32.load offset=96 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 20
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K20 + W20
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 25
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w20)) (i32.load offset=80 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K25 + W25
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w25)) (i32.load offset=100 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 21
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K21 + W21
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 26
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w21)) (i32.load offset=84 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K26 + W26
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w26)) (i32.load offset=104 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 22
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K22 + W22
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 27
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w22)) (i32.load offset=88 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K27 + W27
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w27)) (i32.load offset=108 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 23
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K23 + W23
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 28
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w23)) (i32.load offset=92 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K28 + W28
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w28)) (i32.load offset=112 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 24
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K24 + W24
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 29
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w24)) (i32.load offset=96 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K29 + W29
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w29)) (i32.load offset=116 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 25
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K25 + W25
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 30
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w25)) (i32.load offset=100 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K30 + W30
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w30)) (i32.load offset=120 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 26
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K26 + W26
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 31
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w26)) (i32.load offset=104 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K31 + W31
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w31)) (i32.load offset=124 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 27
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K27 + W27
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 32
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w27)) (i32.load offset=108 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K32 + W32
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w32)) (i32.load offset=128 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 28
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K28 + W28
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 33
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w28)) (i32.load offset=112 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K33 + W33
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w33)) (i32.load offset=132 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 29
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K29 + W29
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 34
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w29)) (i32.load offset=116 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K34 + W34
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w34)) (i32.load offset=136 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 30
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K30 + W30
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 35
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w30)) (i32.load offset=120 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K35 + W35
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w35)) (i32.load offset=140 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 31
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K31 + W31
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 36
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w31)) (i32.load offset=124 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K36 + W36
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w36)) (i32.load offset=144 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 32
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K32 + W32
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 37
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w32)) (i32.load offset=128 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K37 + W37
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w37)) (i32.load offset=148 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 33
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K33 + W33
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 38
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w33)) (i32.load offset=132 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K38 + W38
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w38)) (i32.load offset=152 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 34
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K34 + W34
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 39
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w34)) (i32.load offset=136 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K39 + W39
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w39)) (i32.load offset=156 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 35
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K35 + W35
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 40
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w35)) (i32.load offset=140 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K40 + W40
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w40)) (i32.load offset=160 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 36
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K36 + W36
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 41
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w36)) (i32.load offset=144 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K41 + W41
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w41)) (i32.load offset=164 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 37
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K37 + W37
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 42
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w37)) (i32.load offset=148 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K42 + W42
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w42)) (i32.load offset=168 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 38
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K38 + W38
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 43
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w38)) (i32.load offset=152 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K43 + W43
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w43)) (i32.load offset=172 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 39
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K39 + W39
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 44
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w39)) (i32.load offset=156 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K44 + W44
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w44)) (i32.load offset=176 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 40
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K40 + W40
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 45
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w40)) (i32.load offset=160 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K45 + W45
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w45)) (i32.load offset=180 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 41
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K41 + W41
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 46
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w41)) (i32.load offset=164 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K46 + W46
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w46)) (i32.load offset=184 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 42
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K42 + W42
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 47
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w42)) (i32.load offset=168 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K47 + W47
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w47)) (i32.load offset=188 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 43
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K43 + W43
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 48
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w43)) (i32.load offset=172 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K48 + W48
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w48)) (i32.load offset=192 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 44
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K44 + W44
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 49
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w44)) (i32.load offset=176 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K49 + W49
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w49)) (i32.load offset=196 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 45
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K45 + W45
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 50
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w45)) (i32.load offset=180 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K50 + W50
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w50)) (i32.load offset=200 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 46
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K46 + W46
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 51
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w46)) (i32.load offset=184 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K51 + W51
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w51)) (i32.load offset=204 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 47
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K47 + W47
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 52
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w47)) (i32.load offset=188 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K52 + W52
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w52)) (i32.load offset=208 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 48
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K48 + W48
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 53
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w48)) (i32.load offset=192 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K53 + W53
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w53)) (i32.load offset=212 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 49
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K49 + W49
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 54
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w49)) (i32.load offset=196 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K54 + W54
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w54)) (i32.load offset=216 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 50
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K50 + W50
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 55
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w50)) (i32.load offset=200 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K55 + W55
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w55)) (i32.load offset=220 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 51
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K51 + W51
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 56
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w51)) (i32.load offset=204 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K56 + W56
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w56)) (i32.load offset=224 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 52
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K52 + W52
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 57
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w52)) (i32.load offset=208 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K57 + W57
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w57)) (i32.load offset=228 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 53
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K53 + W53
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 58
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w53)) (i32.load offset=212 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K58 + W58
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w58)) (i32.load offset=232 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 54
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K54 + W54
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 59
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w54)) (i32.load offset=216 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K59 + W59
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w59)) (i32.load offset=236 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 55
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K55 + W55
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 60
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w55)) (i32.load offset=220 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K60 + W60
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w60)) (i32.load offset=240 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 56
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K56 + W56
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 61
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w56)) (i32.load offset=224 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K61 + W61
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w61)) (i32.load offset=244 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 57
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K57 + W57
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 62
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w57)) (i32.load offset=228 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K62 + W62
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w62)) (i32.load offset=248 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 58
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K58 + W58
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    ;; ROUND 63
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    ;; precompute intermediate values
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w58)) (i32.load offset=232 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
-    ;; T1 = h + big_sig1(e) + ch(e, f, g) + K63 + W63
-    ;; T2 = big_sig0(a) + Maj(a, b, c)
+        ;; update registers
 
-    (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-    (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-    (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-    (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        ;; h <- g
+        (set_local $h (get_local $g))
 
-    (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w63)) (i32.load offset=252 (i32.const 32))))
-    (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+        ;; g <- f
+        (set_local $g (get_local $f))  
 
-    ;; update registers
+        ;; f <- e
+        (set_local $f (get_local $e))  
 
-    ;; h <- g
-    (set_local $h (get_local $g))
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
 
-    ;; g <- f
-    (set_local $g (get_local $f))  
+        ;; d <- c
+        (set_local $d (get_local $c))  
 
-    ;; f <- e
-    (set_local $f (get_local $e))  
+        ;; c <- b
+        (set_local $c (get_local $b))  
 
-    ;; e <- d + T1
-    (set_local $e (i32.add (get_local $d) (get_local $T1)))
+        ;; b <- a
+        (set_local $b (get_local $a))  
 
-    ;; d <- c
-    (set_local $d (get_local $c))  
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
-    ;; c <- b
-    (set_local $c (get_local $b))  
+        ;; ROUND 59
 
-    ;; b <- a
-    (set_local $b (get_local $a))  
+        ;; precompute intermediate values
 
-    ;; a <- T1 + T2
-    (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K59 + W59
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-    
-    ;; HASH COMPLETE FOR MESSAGE BLOCK
-    ;; store hash values
-    (set_local $h1 (i32.load offset=0  (i32.const 0)))
-    (set_local $h2 (i32.load offset=4  (i32.const 0)))
-    (set_local $h3 (i32.load offset=8  (i32.const 0)))
-    (set_local $h4 (i32.load offset=12 (i32.const 0)))
-    (set_local $h5 (i32.load offset=16 (i32.const 0)))
-    (set_local $h6 (i32.load offset=20 (i32.const 0)))
-    (set_local $h7 (i32.load offset=24 (i32.const 0)))
-    (set_local $h8 (i32.load offset=28 (i32.const 0)))
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
 
-    (i32.store offset=0  (i32.const 0) (i32.add (get_local $h1) (get_local $a))) ;;(i32.load offset=0  (get_local $mem))))
-    (i32.store offset=4  (i32.const 0) (i32.add (get_local $h2) (get_local $b))) ;;(i32.load offset=4  (get_local $mem))))
-    (i32.store offset=8  (i32.const 0) (i32.add (get_local $h3) (get_local $c))) ;;(i32.load offset=8  (get_local $mem))))
-    (i32.store offset=12 (i32.const 0) (i32.add (get_local $h4) (get_local $d))) ;;(i32.load offset=12 (get_local $mem))))
-    (i32.store offset=16 (i32.const 0) (i32.add (get_local $h5) (get_local $e))) ;;(i32.load offset=16 (get_local $mem))))
-    (i32.store offset=20 (i32.const 0) (i32.add (get_local $h6) (get_local $f))) ;;(i32.load offset=20 (get_local $mem))))
-    (i32.store offset=24 (i32.const 0) (i32.add (get_local $h7) (get_local $g))) ;;(i32.load offset=24 (get_local $mem))))
-    (i32.store offset=28 (i32.const 0) (i32.add (get_local $h8) (get_local $h))))) ;;(i32.load offset=28 (get_local $mem))))))
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w59)) (i32.load offset=236 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
+
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+
+        ;; ROUND 60
+
+        ;; precompute intermediate values
+
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K60 + W60
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w60)) (i32.load offset=240 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
+
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+
+        ;; ROUND 61
+
+        ;; precompute intermediate values
+
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K61 + W61
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w61)) (i32.load offset=244 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
+
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+
+        ;; ROUND 62
+
+        ;; precompute intermediate values
+
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K62 + W62
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w62)) (i32.load offset=248 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
+
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+
+        ;; ROUND 63
+
+        ;; precompute intermediate values
+
+        ;; T1 = h + big_sig1(e) + ch(e, f, g) + K63 + W63
+        ;; T2 = big_sig0(a) + Maj(a, b, c)
+
+        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
+        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
+        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
+        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+
+        (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w63)) (i32.load offset=252 (i32.const 32))))
+        (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
+
+        ;; update registers
+
+        ;; h <- g
+        (set_local $h (get_local $g))
+
+        ;; g <- f
+        (set_local $g (get_local $f))  
+
+        ;; f <- e
+        (set_local $f (get_local $e))  
+
+        ;; e <- d + T1
+        (set_local $e (i32.add (get_local $d) (get_local $T1)))
+
+        ;; d <- c
+        (set_local $d (get_local $c))  
+
+        ;; c <- b
+        (set_local $c (get_local $b))  
+
+        ;; b <- a
+        (set_local $b (get_local $a))  
+
+        ;; a <- T1 + T2
+        (set_local $a (i32.add (get_local $T1) (get_local $T2)))
+
+        
+        ;; HASH COMPLETE FOR MESSAGE BLOCK
+        ;; store hash values
+        (set_local $h1 (i32.load offset=0  (i32.const 0)))
+        (set_local $h2 (i32.load offset=4  (i32.const 0)))
+        (set_local $h3 (i32.load offset=8  (i32.const 0)))
+        (set_local $h4 (i32.load offset=12 (i32.const 0)))
+        (set_local $h5 (i32.load offset=16 (i32.const 0)))
+        (set_local $h6 (i32.load offset=20 (i32.const 0)))
+        (set_local $h7 (i32.load offset=24 (i32.const 0)))
+        (set_local $h8 (i32.load offset=28 (i32.const 0)))
+
+        (i32.store offset=0  (i32.const 0) (i32.add (get_local $h1) (get_local $a))) ;;(i32.load offset=0  (get_local $mem))))
+        (i32.store offset=4  (i32.const 0) (i32.add (get_local $h2) (get_local $b))) ;;(i32.load offset=4  (get_local $mem))))
+        (i32.store offset=8  (i32.const 0) (i32.add (get_local $h3) (get_local $c))) ;;(i32.load offset=8  (get_local $mem))))
+        (i32.store offset=12 (i32.const 0) (i32.add (get_local $h4) (get_local $d))) ;;(i32.load offset=12 (get_local $mem))))
+        (i32.store offset=16 (i32.const 0) (i32.add (get_local $h5) (get_local $e))) ;;(i32.load offset=16 (get_local $mem))))
+        (i32.store offset=20 (i32.const 0) (i32.add (get_local $h6) (get_local $f))) ;;(i32.load offset=20 (get_local $mem))))
+        (i32.store offset=24 (i32.const 0) (i32.add (get_local $h7) (get_local $g))) ;;(i32.load offset=24 (get_local $mem))))
+        (i32.store offset=28 (i32.const 0) (i32.add (get_local $h8) (get_local $h))))) ;;(i32.load offset=28 (get_local $mem))))))

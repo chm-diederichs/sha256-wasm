@@ -20,8 +20,16 @@ arr[127] = 0xc0
 
 
 const hash = sha256()
-  // .update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')
-  .update('hello')
+  .update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')
+  .update('ijkijkljklmklmnlmnomnopnopq')
+  .update('ijkijkljklmklmnlmnomnopnopq')
+  .update('ijkijkljklmklmnlmnomnopnopq')
+  // .update('hello')
+  // .update(' world.')
+  // .update(' world.')
+
+  // .update(' whdgshjggscorld.')
+
   .digest('hex')
 console.log(hash)
 // console.log('1', hash.slice(0, 8))
@@ -34,7 +42,16 @@ console.log(hash)
 // console.log('8', hash.slice(56, 64))
 
 const refHash = crypto.createHash('sha256')
-  .update('hello')
+  .update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')
+  .update('ijkijkljklmklmnlmnomnopnopq')
+  .update('ijkijkljklmklmnlmnomnopnopq')
+  .update('ijkijkljklmklmnlmnomnopnopq')
+  // .update('hello')
+
+  // .update(' world.')
+  // .update(' world.')
+  // .update(' whdgshjggscorld.')
+
   .digest('hex')
 
 console.log(refHash) 
