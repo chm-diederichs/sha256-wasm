@@ -406,10 +406,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K0 + W0
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w0)) (i32.load offset=0 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -420,7 +420,7 @@
         (set_local $h (get_local $g))
 
         ;; g <- f
-        (set_local $g (get_local $f))
+        (set_local $g (get_local $f))  
 
         ;; f <- e
         (set_local $f (get_local $e))  
@@ -447,10 +447,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K1 + W1
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w1)) (i32.load offset=4 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -488,10 +488,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K2 + W2
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w2)) (i32.load offset=8 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -529,10 +529,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K3 + W3
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w3)) (i32.load offset=12 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -570,10 +570,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K4 + W4
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w4)) (i32.load offset=16 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -611,10 +611,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K5 + W5
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w5)) (i32.load offset=20 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -652,10 +652,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K6 + W6
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w6)) (i32.load offset=24 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -693,10 +693,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K7 + W7
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w7)) (i32.load offset=28 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -734,10 +734,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K8 + W8
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w8)) (i32.load offset=32 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -775,10 +775,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K9 + W9
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w9)) (i32.load offset=36 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -816,10 +816,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K10 + W10
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w10)) (i32.load offset=40 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -857,10 +857,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K11 + W11
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w11)) (i32.load offset=44 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -898,10 +898,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K12 + W12
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w12)) (i32.load offset=48 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -939,10 +939,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K13 + W13
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w13)) (i32.load offset=52 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -980,10 +980,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K14 + W14
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w14)) (i32.load offset=56 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1021,10 +1021,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K15 + W15
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w15)) (i32.load offset=60 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1062,10 +1062,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K16 + W16
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w16)) (i32.load offset=64 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1103,10 +1103,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K17 + W17
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w17)) (i32.load offset=68 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1144,10 +1144,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K18 + W18
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w18)) (i32.load offset=72 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1185,10 +1185,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K19 + W19
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w19)) (i32.load offset=76 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1226,10 +1226,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K20 + W20
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w20)) (i32.load offset=80 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1267,10 +1267,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K21 + W21
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w21)) (i32.load offset=84 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1308,10 +1308,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K22 + W22
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w22)) (i32.load offset=88 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1349,10 +1349,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K23 + W23
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w23)) (i32.load offset=92 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1390,10 +1390,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K24 + W24
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w24)) (i32.load offset=96 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1431,10 +1431,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K25 + W25
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w25)) (i32.load offset=100 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1472,10 +1472,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K26 + W26
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w26)) (i32.load offset=104 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1513,10 +1513,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K27 + W27
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w27)) (i32.load offset=108 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1554,10 +1554,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K28 + W28
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w28)) (i32.load offset=112 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1595,10 +1595,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K29 + W29
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w29)) (i32.load offset=116 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1636,10 +1636,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K30 + W30
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w30)) (i32.load offset=120 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1677,10 +1677,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K31 + W31
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w31)) (i32.load offset=124 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1718,10 +1718,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K32 + W32
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w32)) (i32.load offset=128 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1759,10 +1759,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K33 + W33
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w33)) (i32.load offset=132 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1800,10 +1800,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K34 + W34
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w34)) (i32.load offset=136 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1841,10 +1841,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K35 + W35
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w35)) (i32.load offset=140 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1882,10 +1882,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K36 + W36
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w36)) (i32.load offset=144 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1923,10 +1923,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K37 + W37
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w37)) (i32.load offset=148 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -1964,10 +1964,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K38 + W38
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w38)) (i32.load offset=152 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2005,10 +2005,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K39 + W39
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w39)) (i32.load offset=156 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2046,10 +2046,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K40 + W40
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w40)) (i32.load offset=160 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2087,10 +2087,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K41 + W41
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w41)) (i32.load offset=164 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2128,10 +2128,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K42 + W42
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w42)) (i32.load offset=168 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2169,10 +2169,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K43 + W43
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w43)) (i32.load offset=172 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2210,10 +2210,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K44 + W44
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w44)) (i32.load offset=176 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2251,10 +2251,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K45 + W45
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w45)) (i32.load offset=180 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2292,10 +2292,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K46 + W46
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w46)) (i32.load offset=184 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2333,10 +2333,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K47 + W47
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w47)) (i32.load offset=188 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2374,10 +2374,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K48 + W48
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w48)) (i32.load offset=192 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2415,10 +2415,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K49 + W49
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w49)) (i32.load offset=196 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2456,10 +2456,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K50 + W50
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w50)) (i32.load offset=200 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2497,10 +2497,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K51 + W51
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w51)) (i32.load offset=204 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2538,10 +2538,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K52 + W52
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w52)) (i32.load offset=208 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2579,10 +2579,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K53 + W53
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w53)) (i32.load offset=212 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2620,10 +2620,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K54 + W54
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w54)) (i32.load offset=216 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2661,10 +2661,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K55 + W55
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w55)) (i32.load offset=220 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2702,10 +2702,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K56 + W56
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w56)) (i32.load offset=224 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2743,10 +2743,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K57 + W57
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w57)) (i32.load offset=228 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2784,10 +2784,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K58 + W58
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w58)) (i32.load offset=232 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2825,10 +2825,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K59 + W59
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w59)) (i32.load offset=236 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2866,10 +2866,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K60 + W60
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w60)) (i32.load offset=240 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2907,10 +2907,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K61 + W61
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w61)) (i32.load offset=244 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2948,10 +2948,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K62 + W62
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w62)) (i32.load offset=248 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -2989,10 +2989,10 @@
         ;; T1 = h + big_sig1(e) + ch(e, f, g) + K63 + W63
         ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-        (set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-        (set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-        (set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-        (set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+        (set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+        (set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+        (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+        (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
         (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w63)) (i32.load offset=252 (i32.const 32))))
         (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
@@ -3022,7 +3022,6 @@
 
         ;; a <- T1 + T2
         (set_local $a (i32.add (get_local $T1) (get_local $T2)))
-
         
         ;; HASH COMPLETE FOR MESSAGE BLOCK
         ;; store hash values

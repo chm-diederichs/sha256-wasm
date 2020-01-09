@@ -18,10 +18,10 @@ function round (i) {
 ;; T1 = h + big_sig1(e) + ch(e, f, g) + K${i} + W${i}
 ;; T2 = big_sig0(a) + Maj(a, b, c)
 
-(set_local $ch_res (call $Ch (get_local $e) (get_local $f) (get_local $g)))
-(set_local $maj_res (call $Maj (get_local $a) (get_local $b) (get_local $c)))
-(set_local $big_sig0_res (call $big_sig0 (get_local $a)))
-(set_local $big_sig1_res (call $big_sig1 (get_local $e)))
+(set_local $ch_res (i32.xor (i32.and (get_local $e) (get_local $f)) (i32.and (i32.xor (get_local $e) (i32.const -1)) (get_local $g))))
+(set_local $maj_res (i32.xor (i32.xor (i32.and (get_local $a) (get_local $b)) (i32.and (get_local $a) (get_local $c))) (i32.and (get_local $b) (get_local $c))))
+(set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
+(set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
 (set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w${i})) (i32.load offset=${i * 4} (i32.const 32))))
 (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
