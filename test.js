@@ -2,6 +2,7 @@ const sha256 = require('./')
 const crypto = require('crypto')
 const ref = require('js-sha256')
 const sodium = require('sodium-native')
+const vectors = require('./vectors.json')
 
 // timing benchmark
 {
@@ -65,3 +66,13 @@ for (let i = 0; i < 100; i++) {
 
 console.log(hash.digest('hex'))
 console.log(refHash.digest('hex'))
+
+const failed  = []
+
+for (let vector of vectors) {
+  const buf = Buffer.from(vector.input, 'base64')
+  const hash = sha256().update(buf).digest('hex')
+  if (hash !== vector.hash) failed.push(vector)
+}
+
+console.log('\nthese test vectors failed: ', failed)
