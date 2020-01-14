@@ -112,7 +112,7 @@ Sha256.prototype.ready = Sha256.ready
 function noop () {}
 
 function formatInput (input) {
-  if (input instanceof Uint8Array) return input
+  if (input instanceof Uint8Array) return [input, input.byteLength]
 
   const inputArray = new Uint32Array(Math.ceil(input.length / 4))
 
