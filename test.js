@@ -1,65 +1,67 @@
-const sha256 = require('./')
+const monolith = require('./')
 const crypto = require('crypto')
-const js256 = require('js-sha256')
+const ref = require('js-sha256')
+const sodium = require('sodium-native')
 
-console.time('sha256')
-for (let i = 0; i < 1000; i++) {
-  const hash = sha256()
-    .update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    .update("now let's see if you can handle an exceptionally e, hopefully one that fills the block size and then some... now wouldn't that be an interesting test case, i'm sure i'd like to know the result of that. Wouldn't you?")
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    // .update('hello')
-    // .update(' world.')
-    // .update(' world.')
+// timing benchmark
+{
+  const buf = Buffer.alloc(8192)
+  sodium.randombytes_buf(buf)
 
-    // .update(' whdgshjggscorld.')
+  const monoHash = monolith()
+  const jsHash = ref.create()
+  const refHash = crypto.createHash('sha256') 
+  
+  console.time('monolith')
+  for (let i = 0; i < 1000; i++) {
+    monoHash.update(buf)
+  }
+  const monoRes = monoHash.digest('hex')
+  console.timeEnd('monolith')
 
-    .digest('hex')
+  console.time('js')
+  for (let i = 0; i < 1000; i++) {
+    jsHash.update(buf)
+  }
+  const jsRes = jsHash.hex()
+  console.timeEnd('js')
+
+  console.time('native')
+  for (let i = 0; i < 1000; i++) {
+    refHash.update(buf)
+  }
+  const refRes = refHash.digest('hex')
+  console.timeEnd('native')
+
+  console.log('\nhashes are consistent: ', monoRes === refRes && monoRes === jsRes)
 }
-console.timeEnd('sha256')
 
-console.time('js')
-for (let i = 0; i < 1000; i++) {
-  const hash = js256.create()
-    .update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    .update("now let's see if you can handle an exceptionally e, hopefully one that fills the block size and then some... now wouldn't that be an interesting test case, i'm sure i'd like to know the result of that. Wouldn't you?")
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    // .update('hello')
-    // .update(' world.')
-    // .update(' world.')
+// naive input fuzz
+const bugs = []
 
-    // .update(' whdgshjggscorld.')
+for (let i = 0; i < 100; i++) {
+  const length = Math.floor(2 ** 18 * Math.random())
+  const buf = Buffer.alloc(length)
+  sodium.randombytes_buf(buf)
+  const hash = monolith().update(buf).digest('hex')
+  const ref = crypto.createHash('sha256').update(buf).digest('hex')
 
-    .digest('hex')
+  if (hash !== ref) bugs.push(length)
 }
-console.timeEnd('js')
-// console.log('1', hash.slice(0, 8))
-// console.log('2', hash.slice(8, 16))
-// console.log('3', hash.slice(16, 24))
-// console.log('4', hash.slice(24, 32))
-// console.log('5', hash.slice(32, 40))
-// console.log('6', hash.slice(40, 48))
-// console.log('7', hash.slice(48, 56))
-// console.log('8', hash.slice(56, 64))
 
-console.time('sha256 ref')
-for (let i = 0; i < 1000; i++) {
-  const refHash = crypto.createHash('sha256')
-    .update('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    .update("now let's see if you can handle an exceptionally e, hopefully one that fills the block size and then some... now wouldn't that be an interesting test case, i'm sure i'd like to know the result of that. Wouldn't you?")
-    .update('ijkijkljklmklmnlmnomnopnopq')
-    // .update('hello')
+console.log('\nhashes inconsistent at lengths:', bugs, '\n')
 
-    // .update(' world.')
-    // .update(' world.')
-    // .update(' whdgshjggscorld.')
+// fuzz multiple updates
+const monoHash = monolith()
+const refHash = crypto.createHash('sha256') 
 
-    .digest('hex')
+for (let i = 0; i < 100; i++) {
+  const buf = Buffer.alloc(2**16 * Math.random())
+  sodium.randombytes_buf(buf)
+  
+  monoHash.update(buf)
+  refHash.update(buf)
 }
-console.timeEnd('sha256 ref')
+
+console.log(monoHash.digest('hex'))
+console.log(refHash.digest('hex'))

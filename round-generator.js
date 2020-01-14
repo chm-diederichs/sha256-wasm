@@ -23,7 +23,7 @@ function round (i) {
 (set_local $big_sig0_res (i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 2)) (i32.rotr (get_local $a) (i32.const 13))) (i32.rotr (get_local $a) (i32.const 22))))
 (set_local $big_sig1_res (i32.xor  (i32.xor (i32.rotr (get_local $e) (i32.const 6)) (i32.rotr (get_local $e) (i32.const 11))) (i32.rotr (get_local $e) (i32.const 25))))
 
-(set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w${i})) (i32.load offset=${i * 4} (i32.const 32))))
+(set_local $T1 (i32.add (i32.add (i32.add (i32.add (get_local $h) (get_local $ch_res)) (get_local $big_sig1_res)) (get_local $w${i})) (get_local $k${i})))
 (set_local $T2 (i32.add (get_local $big_sig0_res) (get_local $maj_res)))
 
 ;; update registers
@@ -53,6 +53,18 @@ function round (i) {
 (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
 `
+}
+
+function deriveWords (i) {
+  return `(set_local $w${i} (i32.add (i32.add (i32.add ${sig1(i - 2)} (get_local $w${i - 7})) ${sig0(i - 15)} (get_local $w${i - 16}))))\n`
+}
+
+function sig0 (a) {
+  return `(i32.xor (i32.xor (i32.rotr (get_local $w${a}) (i32.const 7)) (i32.rotr (get_local $w${a}) (i32.const 18))) (i32.shr_u (get_local $w${a}) (i32.const 3)))`
+}
+
+function sig1 (a) {
+  return `(i32.xor (i32.xor (i32.rotr (get_local $w${a}) (i32.const 17)) (i32.rotr (get_local $w${a}) (i32.const 19))) (i32.shr_u (get_local $w${a}) (i32.const 10)))`
 }
 
 const K_words = [
@@ -134,7 +146,7 @@ const IV = [
 ]
 
 for (let i = 0; i < 64; i++) {
-  str.write(round(i))
+  str.write(deriveWords(i))
   // console.log(`i32.store (i32.const ${292 + 4 * i}) (get_local $w${i}))`)
 }
 
