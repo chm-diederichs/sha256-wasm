@@ -30,10 +30,9 @@ function Sha256 () {
   }
 
   this.finalized = false
-  this.digestLength = 32
-  this.leftover = 0
+  this.digestLength = hashLength
   this.pointer = freeList.pop()
-  this.result
+  this.leftover
 
   wasm.memory.fill(0, this.pointer, this.pointer + 512)
 
@@ -48,32 +47,36 @@ Sha256.prototype.update = function (input) {
   let [ inputBuf, length ] = formatInput(input)
   assert(this.finalized === false, 'Hash instance finalized')
   assert(inputBuf instanceof Uint8Array, 'input must be Uint8Array or Buffer')
+
   if (head + input.length > wasm.memory.length) wasm.realloc(head + input.length)
 
-  wasm.memory.set(inputBuf, this.leftover + head)
+  if (this.leftover != null) {
+    wasm.memory.set(this.leftover, head)
+    wasm.memory.set(inputBuf, this.leftover.byteLength + head)
+  } else {
+    wasm.memory.set(inputBuf, head)
+  }
+  
+  const overlap = this.leftover ? this.leftover.byteLength : 0  
+  const leftover = wasm.exports.sha256_monolith(this.pointer, head, head + length + overlap, 0)
 
-  this.leftover = wasm.exports.sha256_monolith(this.pointer, head, head + length + this.leftover, 0)
+  this.leftover = wasm.memory.slice(head, head + leftover)
   return this
 }
 
 Sha256.prototype.digest = function (enc) {
-  // console.log(wasm.memory.subarray(288, 388), 'input data')
   assert(this.finalized === false, 'Hash instance finalized')
   this.finalized = true
-  // console.log(hexSlice(wasm.memory, 1400, 128))
-  freeList.push(this.pointer)
-  wasm.exports.sha256_monolith(this.pointer, head, head + this.leftover, 1)
-  // console.log(hexSlice(wasm.memory, 704, 128))
-  // console.log(hexSlice(wasm.memory, 1400, 128))
-  // console.log(wasm.memory.subarray(this.pointer, this.pointer + 32), head, this.pointer)
 
+  freeList.push(this.pointer)
+
+  wasm.exports.sha256_monolith(this.pointer, head, head + this.leftover.byteLength, 1)
 
   // if (!enc || end === 'binary') {    
   //   return wasm.memory.slice(this.pointer, this.pointer + 32)
   // }
 
-  this.result = int32reverse(wasm.memory, this.pointer, this.digestLength)
-  return this.result
+  return int32reverse(wasm.memory, this.pointer, this.digestLength)
   if (enc === 'hex') {
     return hexSlice(wasm.memory, this.pointer, 32)
   }
