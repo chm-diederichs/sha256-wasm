@@ -76,3 +76,30 @@ for (let vector of vectors) {
 }
 
 console.log('\nthese test vectors failed: ', failed)
+
+// several instances updated simultaneously
+{
+  const hash1 = sha256() 
+  const hash2 = sha256()
+  const refHash = crypto.createHash('sha256')
+
+  const buf = Buffer.alloc(1024)
+
+  for (let i = 0; i < 10000; i++) {
+    sodium.randombytes_buf(buf)
+    if (Math.random() < 0.5) {
+      hash1.update(buf)
+      hash2.update(buf)
+    } else {
+      hash2.update(buf)
+      hash1.update(buf)
+    }
+    refHash.update(buf)
+  }
+
+  const res = refHash.digest('hex')
+  const res1 = hash1.digest('hex')
+  const res2 = hash2.digest('hex')
+
+  console.log('\nhashes invariant to update order: ', res === res1 && res1 === res2)
+}
