@@ -41,14 +41,17 @@ function Sha256 () {
   // wasm.exports.sha256_init(0 , this.digestLength) //(this.pointer, this.digestLength)
 }
 
-Sha256.prototype.update = function (input) {
-  // assert input % 8 === 0 for alignment
-
-  let [ inputBuf, length ] = formatInput(input)
+Sha256.prototype.update = function (input, enc) {
   assert(this.finalized === false, 'Hash instance finalized')
-  assert(inputBuf instanceof Uint8Array, 'input must be Uint8Array or Buffer')
-  if (head + input.length > wasm.memory.length) wasm.realloc(head + input.length)
 
+  if (head % 4 !== 0) head += 4 - head % 4
+  assert(head % 4 === 0, 'input shoud be aligned for int32')
+
+  let [ inputBuf, length ] = formatInput(input, enc)
+  
+  assert(inputBuf instanceof Uint8Array, 'input must be Uint8Array or Buffer')
+  
+  if (head + length > wasm.memory.length) wasm.realloc(head + input.length)
   
   if (this.leftover != null) {
     wasm.memory.set(this.leftover, head)
@@ -64,26 +67,29 @@ Sha256.prototype.update = function (input) {
   return this
 }
 
-Sha256.prototype.digest = function (enc) {
-  // console.log(wasm.memory.subarray(288, 388), 'input data')
+Sha256.prototype.digest = function (enc, offset = 0) {
   assert(this.finalized === false, 'Hash instance finalized')
+
   this.finalized = true
   freeList.push(this.pointer)
 
   wasm.exports.sha256_monolith(this.pointer, head, head + this.leftover.byteLength, 1)
 
-  // if (!enc || end === 'binary') {    
-  //   return wasm.memory.slice(this.pointer, this.pointer + 32)
-  // }
+  const resultBuf = int32reverse(wasm.memory, this.pointer, this.digestLength)
 
-  return int32reverse(wasm.memory, this.pointer, this.digestLength)
-  if (enc === 'hex') {
-    return hexSlice(wasm.memory, this.pointer, 32)
+  if (!enc) {    
+    return resultBuf
   }
 
-  assert(enc instanceof Uint8Array && enc.length >= 32, 'input must be Uint8Array or Buffer')
-  for (let i = 0; i < 32; i++) {
-    enc[i] = wasm.memory[this.pointer + 32 + i]
+  if (typeof enc === 'string') {
+    return resultBuf.toString(enc)
+  }
+
+  assert(enc instanceof Uint8Array, 'input must be Uint8Array or Buffer')
+  assert(enc.byteLength >= this.digestLength + offset, 'input not large enough for digest')
+
+  for (let i = 0; i < this.digestLength; i++) {
+    enc[i + offset] = resultBuf[i]
   }
 
   return enc
@@ -93,7 +99,7 @@ Sha256.ready = function (cb) {
   if (!cb) cb = noop
   if (!wasm) return cb(new Error('WebAssembly not supported'))
 
-  var p = new Promise(function (reject, result) {
+  var p = new Promise(function (reject, resolve) {
     wasm.onload(function (err) {
       if (err) resolve(err)
       else reject()
@@ -108,46 +114,27 @@ Sha256.prototype.ready = Sha256.ready
 
 function noop () {}
 
-function formatInput (input) {
-  const value = new Uint8Array(Buffer.from(input))
-  return [value, value.byteLength]
+function formatInput (input, enc = null) {
+  const inputBuf = Buffer.from(input, enc)
+  const result = new Uint8Array(inputBuf)
 
-  if (input instanceof Uint8Array) return input
-
-  const inputArray = new Uint32Array(Math.ceil(input.length / 4))
-
-  const buf = Buffer.alloc(inputArray.byteLength)
-  buf.set(Buffer.from(input, 'utf8'), 0)
-
-  let i = 0
-
-  for (; i < buf.byteLength / 4; i++) {
-    inputArray[i] = buf.readUInt32LE(4 * i)
-  }
-
-  return [
-    new Uint8Array(inputArray.buffer),
-    input.length
-  ]
+  return [result, result.byteLength]
 }
 
 function int32reverse (buf, start, len) {
-  var str = ''
-  var chars = []
+  const result = new Uint8Array(len)
 
   for (let i = 0; i < len; i++) {
-    chars.push(toHex(buf[start + i]))
-
-    if ((i + 1) % 4 === 0) {
-      str += chars.reverse().join('')
-      chars = []
-    }
+    const index = Math.floor(i / 4) * 4 + 3 - i % 4
+    result[index] = buf[i + start]
   }
 
-  return str
+  return Buffer.from(result)
 }
 
-function hexSlice (buf, start, len) {
+function hexSlice (buf, start = 0, len) {
+  if (!len) len = buf.byteLength
+
   var str = ''
   for (var i = 0; i < len; i++) str += toHex(buf[start + i])
   return str

@@ -10,7 +10,7 @@
   (func $f64.log (import "debug" "log") (param f64))
   (func $f64.log_tee (import "debug" "log_tee") (param f64) (result f64))
 
-  (memory (export "memory") 10 1000)
+  (memory (export "memory") 10 65536)
 
   ;; i64 logging by splitting into two i32 limbs
   (func $i64.log
@@ -31,6 +31,11 @@
     
   (func $sha256_monolith (export "sha256_monolith") (param $ctx i32) (param $input i32) (param $input_end i32) (param $final i32)
     (result i32)
+
+    ;; storage schema:
+    ;; [0..32] - hash state
+    ;; [32..92] - store words between updates 88
+    ;; [92..100] - number of bytes read between across all updates (64bit)
 
     (local $i i32)
     (local $ptr i32)
@@ -161,17 +166,17 @@
     (set_local $k63 (i32.xor (i32.const 0xc67178f2) (i32.const 0)))
 
     ;; load current block_position
-    (set_local $bytes_read (i64.load offset=96 (get_local $ctx)))
+    (set_local $bytes_read (i64.load offset=92 (get_local $ctx)))
     (set_local $block_position (i32.wrap/i64 (i64.rem_u (get_local $bytes_read) (i64.const 64))))
     (set_local $leftover (i32.rem_u (get_local $input_end) (i32.const 4)))
     (set_local $end_point (i32.sub (get_local $input_end) (get_local $leftover)))
 
-        ;;  store inital state
+    ;;  store inital state
     (if (i64.lt_u (get_local $bytes_read) (i64.const 64))
         (then
             (i32.store offset=0  (get_local $ctx) (i32.xor (i32.const 0x6a09e667) (i32.const 0)))
             (i32.store offset=4  (get_local $ctx) (i32.xor (i32.const 0xbb67ae85) (i32.const 0)))
-            (i32.store offset=8 (get_local $ctx) (i32.xor (i32.const 0x3c6ef372) (i32.const 0)))   
+            (i32.store offset=8  (get_local $ctx) (i32.xor (i32.const 0x3c6ef372) (i32.const 0)))   
             (i32.store offset=12 (get_local $ctx) (i32.xor (i32.const 0xa54ff53a) (i32.const 0)))
             (i32.store offset=16 (get_local $ctx) (i32.xor (i32.const 0x510e527f) (i32.const 0)))
             (i32.store offset=20 (get_local $ctx) (i32.xor (i32.const 0x9b05688c) (i32.const 0)))
@@ -3109,6 +3114,7 @@
                     ;; a <- T1 + T2
                     (set_local $a (i32.add (get_local $T1) (get_local $T2)))
 
+                    ;; store hash state in between updates
                     (i32.store offset=0  (get_local $ctx) (i32.add (i32.load offset=0  (get_local $ctx)) (get_local $a)))
                     (i32.store offset=4  (get_local $ctx) (i32.add (i32.load offset=4  (get_local $ctx)) (get_local $b)))
                     (i32.store offset=8  (get_local $ctx) (i32.add (i32.load offset=8  (get_local $ctx)) (get_local $c)))
@@ -3392,7 +3398,6 @@
                             (br $break))))
 
     ;;  store block position
-    ;; (set_local $block_position (i32.add (get_local $block_position) (get_local $leftover)))
     (get_local $ctx)
     (get_local $bytes_read)
     (i64.const 64)
@@ -3402,7 +3407,7 @@
     (get_local $block_position)
     (i64.extend_u/i32)
     (i64.add)
-    (i64.store offset=96)
+    (i64.store offset=92)
 
     ;;  store leftover bytes and return number of bytes modulo 4
     (i32.store (get_local $input) (i32.load (get_local $ptr)))
@@ -3416,9 +3421,6 @@
             (i32.or)
             (set_local $last_word)
 
-            
-            ;; (call $i32.log (get_local  $w15))
-            ;; (set_local $block_position (i32.add (get_local $block_position) (i32.const 8)))
             (set_local $bytes_read (i64.add (get_local $bytes_read) (i64.extend_u/i32 (get_local $leftover))))
 
             (block $pad_end
