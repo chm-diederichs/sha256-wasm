@@ -14,11 +14,11 @@ const wasm = require('./sha256.js')({
 })
 
 let head = 0
-// assetrt head % 8 === 0 to guarantee alignment
 const freeList = []
 
 module.exports = Sha256
-const hashLength = 32
+const SHA256_BYTES = module.exports.SHA256_BYTES = 32
+const SHA256_STATE = 100
 
 function Sha256 () {
   if (!(this instanceof Sha256)) return new Sha256()
@@ -26,19 +26,17 @@ function Sha256 () {
 
   if (!freeList.length) {
     freeList.push(head)
-    head += 512
+    head += 100 // need 100 bytes for internal state
   }
 
   this.finalized = false
-  this.digestLength = hashLength
+  this.digestLength = SHA256_BYTES
   this.pointer = freeList.pop()
   this.leftover
 
-  wasm.memory.fill(0, this.pointer, this.pointer + 512)
+  wasm.memory.fill(0, this.pointer, this.pointer + 100)
 
-  if (this.pointer + hashLength > wasm.memory.length) wasm.realloc(this.pointer + 512)
-  
-  // wasm.exports.sha256_init(0 , this.digestLength) //(this.pointer, this.digestLength)
+  if (this.pointer + this.digestLength > wasm.memory.length) wasm.realloc(this.pointer + 100)
 }
 
 Sha256.prototype.update = function (input, enc) {
@@ -75,7 +73,7 @@ Sha256.prototype.digest = function (enc, offset = 0) {
 
   wasm.exports.sha256_monolith(this.pointer, head, head + this.leftover.byteLength, 1)
 
-  const resultBuf = int32reverse(wasm.memory, this.pointer, this.digestLength)
+  const resultBuf = readReverseEndian(wasm.memory, 4, this.pointer, this.digestLength)
 
   if (!enc) {    
     return resultBuf
@@ -121,11 +119,11 @@ function formatInput (input, enc = null) {
   return [result, result.byteLength]
 }
 
-function int32reverse (buf, start, len) {
+function readReverseEndian (buf, interval, start, len) {
   const result = new Uint8Array(len)
 
   for (let i = 0; i < len; i++) {
-    const index = Math.floor(i / 4) * 4 + 3 - i % 4
+    const index = Math.floor(i / interval) * interval + (interval - 1) - i % interval
     result[index] = buf[i + start]
   }
 
