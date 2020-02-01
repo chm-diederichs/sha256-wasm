@@ -3,6 +3,13 @@ const crypto = require('crypto')
 const ref = require('js-sha256')
 const vectors = require('./vectors.json')
 
+// empty input
+{
+  const hash = sha256().digest('hex')
+  const ref = crypto.createHash('sha256').digest('hex')
+  console.log('hash consistent for empty input: ', hash === ref, '\n')
+}
+
 // timing benchmark
 {
   const buf = Buffer.alloc(8192)
