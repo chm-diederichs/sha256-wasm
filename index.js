@@ -22,7 +22,7 @@ const SHA256_STATE = 100
 
 function Sha256 () {
   if (!(this instanceof Sha256)) return new Sha256()
-  if (!(wasm && wasm.exports)) throw new Error('WASM not loaded. Wait for Blake2b.ready(cb)')
+  if (!(wasm && wasm.exports)) throw new Error('WASM not loaded. Wait for Sha256.ready(cb)')
 
   if (!freeList.length) {
     freeList.push(head)
