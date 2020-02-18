@@ -45,8 +45,6 @@ tape('empty input', function (t) {
 }
 
 tape('naive input fuzz', function (t) {
-  const bugs = []
-
   for (let i = 0; i < 10; i++) {
     const buf = crypto.randomBytes(2 ** 18 * Math.random())
 
@@ -93,7 +91,7 @@ tape('crypto-browserify test vectors', function (t) {
   for (let vector of vectors) {
     const buf = Buffer.from(vector.input, 'base64')
     const hash = sha256().update(buf).digest('hex')
-    t.equal(hash, vector.hash, `failed on input ${i}`)
+    t.equal(hash, vector.hash, `input ${i}`)
     i++
   }
   t.end()
