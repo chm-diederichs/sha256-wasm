@@ -59,7 +59,7 @@ Sha256.prototype.update = function (input, enc) {
   }
   
   const overlap = this.leftover ? this.leftover.byteLength : 0
-  const leftover = wasm.exports.sha256_monolith(this.pointer, head, head + length + overlap, 0)
+  const leftover = wasm.exports.sha256(this.pointer, head, head + length + overlap, 0)
 
   this.leftover = wasm.memory.slice(head, head + leftover)
   return this
@@ -71,7 +71,7 @@ Sha256.prototype.digest = function (enc, offset = 0) {
   this.finalized = true
   freeList.push(this.pointer)
 
-  wasm.exports.sha256_monolith(this.pointer, head, head + this.leftover.byteLength, 1)
+  wasm.exports.sha256(this.pointer, head, head + this.leftover.byteLength, 1)
 
   const resultBuf = readReverseEndian(wasm.memory, 4, this.pointer, this.digestLength)
 
