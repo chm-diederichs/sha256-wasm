@@ -18,7 +18,7 @@
         (call $i32x2.log
             ;; Upper limb
             (i32.wrap/i64
-                (i64.shl (get_local $0)
+                (i64.shr_u (get_local $0)
                     (i64.const 32)))
             ;; Lower limb
             (i32.wrap/i64 (get_local $0))))

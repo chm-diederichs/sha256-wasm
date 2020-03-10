@@ -61,7 +61,7 @@ Sha256.prototype.update = function (input, enc) {
   const overlap = this.leftover ? this.leftover.byteLength : 0
   const leftover = wasm.exports.sha256(this.pointer, head, head + length + overlap, 0)
 
-  this.leftover = wasm.memory.slice(head, head + leftover)
+  this.leftover = inputBuf.slice(inputBuf.byteLength - leftover)
   return this
 }
 
@@ -113,21 +113,25 @@ Sha256.prototype.ready = Sha256.ready
 function noop () {}
 
 function formatInput (input, enc = null) {
-  const inputBuf = Buffer.from(input, enc)
-  const result = new Uint8Array(inputBuf)
+  let result
+  if (Buffer.isBuffer(input)) {
+    result = input
+  } else {
+    result = Buffer.from(input, enc)
+  }
 
   return [result, result.byteLength]
 }
 
 function readReverseEndian (buf, interval, start, len) {
-  const result = new Uint8Array(len)
+  const result = Buffer.allocUnsafe(len)
 
   for (let i = 0; i < len; i++) {
     const index = Math.floor(i / interval) * interval + (interval - 1) - i % interval
     result[index] = buf[i + start]
   }
 
-  return Buffer.from(result)
+  return result
 }
 
 function hexSlice (buf, start = 0, len) {
