@@ -26,9 +26,19 @@ Create a new hash instance.
 
 Update the hash with a new piece of data. `data` may be passed as a buffer, uint8array or a string. If `data` is passed as a string, then it will be interpreted as a `utf8` string unless `enc` specifies an encoding.
 
+Supported `enc`s are:
+- `utf8` / `utf-8` (defualt)
+- `hex`
+- `base64`
+
 #### `hash.digest([enc])`
 
 Digest the hash. If `enc` is specified, then the digest shall be returned as an `enc` encoded string. Otherwise a buffer is returned.
+
+Supported `enc`s are:
+- `utf8` / `utf-8` (defualt)
+- `hex`
+- `base64`
 
 #### `var promise = sha256.ready([cb])`
 

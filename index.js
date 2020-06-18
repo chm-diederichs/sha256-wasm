@@ -1,3 +1,6 @@
+if (btoa == null) var btoa = buf => require('buf' + 'fer')['Buf' + 'fer'].from(buf).toString('base64')
+if (atob == null) var atob = buf => new Uint8Array(require('buf' + 'fer')['Buf' + 'fer'].from(buf, 'base64'))
+
 const assert = require('nanoassert')
 const wasm = require('./sha256.js')({
   imports: {
@@ -32,7 +35,7 @@ function Sha256 () {
   this.finalized = false
   this.digestLength = SHA256_BYTES
   this.pointer = freeList.pop()
-  this.leftover = Buffer.alloc(0)
+  this.leftover = new Uint8Array(0)
 
   wasm.memory.fill(0, this.pointer, this.pointer + 100)
 
@@ -45,19 +48,19 @@ Sha256.prototype.update = function (input, enc) {
   if (head % 4 !== 0) head += 4 - head % 4
   assert(head % 4 === 0, 'input shoud be aligned for int32')
 
-  let [ inputBuf, length ] = formatInput(input, enc)
-  
+  const [inputBuf, length] = formatInput(input, enc)
+
   assert(inputBuf instanceof Uint8Array, 'input must be Uint8Array or Buffer')
-  
+
   if (head + length > wasm.memory.length) wasm.realloc(head + input.length)
-  
+
   if (this.leftover != null) {
     wasm.memory.set(this.leftover, head)
     wasm.memory.set(inputBuf, this.leftover.byteLength + head)
   } else {
     wasm.memory.set(inputBuf, head)
   }
-  
+
   const overlap = this.leftover ? this.leftover.byteLength : 0
   const leftover = wasm.exports.sha256(this.pointer, head, head + length + overlap, 0)
 
@@ -75,12 +78,15 @@ Sha256.prototype.digest = function (enc, offset = 0) {
 
   const resultBuf = readReverseEndian(wasm.memory, 4, this.pointer, this.digestLength)
 
-  if (!enc) {    
+  if (!enc) {
     return resultBuf
   }
 
   if (typeof enc === 'string') {
-    return resultBuf.toString(enc)
+    if (enc === 'hex') return hexSlice(resultBuf, 0, resultBuf.length)
+    if (enc === 'utf8' || enc === 'utf-8') return new TextEncoder().encode(resultBuf)
+    if (enc === 'base64') return btoa(resultBuf)
+    throw new Error('Encoding: ' + enc + ' not supported')
   }
 
   assert(enc instanceof Uint8Array, 'input must be Uint8Array or Buffer')
@@ -112,19 +118,28 @@ Sha256.prototype.ready = Sha256.ready
 
 function noop () {}
 
-function formatInput (input, enc = null) {
-  let result
-  if (Buffer.isBuffer(input)) {
-    result = input
-  } else {
-    result = Buffer.from(input, enc)
-  }
+function formatInput (input, enc) {
+  var result = input instanceof Uint8Array ? input : strToBuf(input, enc)
 
   return [result, result.byteLength]
 }
 
+function strToBuf (input, enc) {
+  if (enc === 'hex') return hex2bin(input)
+  else if (enc === 'utf8' || enc === 'utf-8') return new TextDecoder().decode(input)
+  else if (enc === 'base64') return atob(input)
+  else throw new Error('Encoding: ' + enc + ' not supported')
+}
+
+function hex2bin (str) {
+  if (str.length % 2 !== 0) return hex2bin('0' + str)
+  var ret = new Uint8Array(str.length / 2)
+  for (var i = 0; i < ret.length; i++) ret[i] = Number('0x' + str.substring(2 * i, 2 * i + 2))
+  return ret
+}
+
 function readReverseEndian (buf, interval, start, len) {
-  const result = Buffer.allocUnsafe(len)
+  const result = new Uint8Array(len)
 
   for (let i = 0; i < len; i++) {
     const index = Math.floor(i / interval) * interval + (interval - 1) - i % interval

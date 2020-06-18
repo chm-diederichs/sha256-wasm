@@ -3356,6 +3356,7 @@
                 
                 (set_local $ptr (i32.add (get_local $ptr) (i32.const 4)))
                 (set_local $block_position (i32.add (get_local $block_position) (i32.const 4)))
+
                 (br $start)))
             
             (if (i32.ne (get_local $end_point) (get_local $input_end))
