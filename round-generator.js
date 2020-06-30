@@ -56,16 +56,18 @@ function round (i) {
 }
 
 function deriveWords (i) {
-  return `(set_local $w${i} (i32.add (i32.add (i32.add ${sig1(i - 2)} (get_local $w${i - 7})) ${sig0(i - 15)} (get_local $w${i - 16}))))\n`
+  return `(set_local $w${i} (i32.add (i32.add (i32.add ${sig1(i - 2)} (get_local $b)) ${sig0(i - 15)} (get_local $b))))\n`
 }
 
 function sig0 (a) {
-  return `(i32.xor (i32.xor (i32.rotr (get_local $w${a}) (i32.const 7)) (i32.rotr (get_local $w${a}) (i32.const 18))) (i32.shr_u (get_local $w${a}) (i32.const 3)))`
+  return `(i32.xor (i32.xor (i32.rotr (get_local $a) (i32.const 7)) (i32.rotr (get_local $a) (i32.const 18))) (i32.shr_u (get_local $a) (i32.const 3)))`
 }
 
 function sig1 (a) {
-  return `(i32.xor (i32.xor (i32.rotr (get_local $w${a}) (i32.const 17)) (i32.rotr (get_local $w${a}) (i32.const 19))) (i32.shr_u (get_local $w${a}) (i32.const 10)))`
+  return `(i32.xor (i32.xor (i32.rotr (get_local $wc) (i32.const 17)) (i32.rotr (get_local $wc) (i32.const 19))) (i32.shr_u (get_local $c) (i32.const 10)))`
 }
+
+console.log(deriveWords())
 
 const K_words = [
   '428a2f98',

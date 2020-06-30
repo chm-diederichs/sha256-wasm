@@ -21,7 +21,9 @@ const freeList = []
 
 module.exports = Sha256
 const SHA256_BYTES = module.exports.SHA256_BYTES = 32
-const SHA256_STATE = 100
+const INPUT_OFFSET = 40
+const STATEBYTES = 108
+const BLOCKSIZE = 64
 
 function Sha256 () {
   if (!(this instanceof Sha256)) return new Sha256()
@@ -35,11 +37,11 @@ function Sha256 () {
   this.finalized = false
   this.digestLength = SHA256_BYTES
   this.pointer = freeList.pop()
-  this.leftover = new Uint8Array(0)
+  this.pos = 0
 
-  wasm.memory.fill(0, this.pointer, this.pointer + 100)
+  wasm.memory.fill(0, this.pointer, this.pointer + STATEBYTES)
 
-  if (this.pointer + this.digestLength > wasm.memory.length) wasm.realloc(this.pointer + 100)
+  if (this.pointer + this.digestLength > wasm.memory.length) wasm.realloc(this.pointer + STATEBYTES)
 }
 
 Sha256.prototype.update = function (input, enc) {
@@ -54,17 +56,13 @@ Sha256.prototype.update = function (input, enc) {
 
   if (head + length > wasm.memory.length) wasm.realloc(head + input.length)
 
-  if (this.leftover != null) {
-    wasm.memory.set(this.leftover, head)
-    wasm.memory.set(inputBuf, this.leftover.byteLength + head)
-  } else {
-    wasm.memory.set(inputBuf, head)
-  }
+  wasm.memory.fill(0, head, head + roundUp(length, BLOCKSIZE) - BLOCKSIZE)
+  wasm.memory.set(inputBuf.subarray(0, BLOCKSIZE - this.pos), this.pointer + INPUT_OFFSET + this.pos)
+  wasm.memory.set(inputBuf.subarray(BLOCKSIZE - this.pos), head)
 
-  const overlap = this.leftover ? this.leftover.byteLength : 0
-  const leftover = wasm.exports.sha256(this.pointer, head, head + length + overlap, 0)
+  this.pos = (this.pos + length) & 0x3f
+  wasm.exports.sha256(this.pointer, head, length, 0)
 
-  this.leftover = inputBuf.slice(inputBuf.byteLength - leftover)
   return this
 }
 
@@ -74,9 +72,11 @@ Sha256.prototype.digest = function (enc, offset = 0) {
   this.finalized = true
   freeList.push(this.pointer)
 
-  wasm.exports.sha256(this.pointer, head, head + this.leftover.byteLength, 1)
+  const paddingStart = this.pointer + INPUT_OFFSET + this.pos
+  wasm.memory.fill(0, paddingStart, this.pointer + INPUT_OFFSET + BLOCKSIZE)
+  wasm.exports.sha256(this.pointer, head, 0, 1)
 
-  const resultBuf = readReverseEndian(wasm.memory, 4, this.pointer, this.digestLength)
+  const resultBuf = wasm.memory.subarray(this.pointer, this.pointer + this.digestLength)
 
   if (!enc) {
     return resultBuf
@@ -160,4 +160,9 @@ function hexSlice (buf, start = 0, len) {
 function toHex (n) {
   if (n < 16) return '0' + n.toString(16)
   return n.toString(16)
+}
+
+// only works for base that is power of 2
+function roundUp (n, base) {
+  return (n + base - 1) & -base
 }
