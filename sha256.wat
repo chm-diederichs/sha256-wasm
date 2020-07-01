@@ -1,33 +1,5 @@
 (module
-    (func $i32.log (import "debug" "log") (param i32))
-    (func $i32.log_tee (import "debug" "log_tee") (param i32) (result i32))
-    ;; No i64 interop with JS yet - but maybe coming with WebAssembly BigInt
-    ;; So we can instead fake this by splitting the i64 into two i32 limbs,
-    ;; however these are WASM functions using i32x2.log:
-    (func $i32x2.log (import "debug" "log") (param i32) (param i32))
-    (func $f32.log (import "debug" "log") (param f32))
-    (func $f32.log_tee (import "debug" "log_tee") (param f32) (result f32))
-    (func $f64.log (import "debug" "log") (param f64))
-    (func $f64.log_tee (import "debug" "log_tee") (param f64) (result f64))
-    
     (memory (export "memory") 10 65536)
-    
-    ;; i64 logging by splitting into two i32 limbs
-    (func $i64.log
-        (param $0 i64)
-        (call $i32x2.log
-            ;; Upper limb
-            (i32.wrap/i64
-                (i64.shr_u (get_local $0)
-                    (i64.const 32)))
-            ;; Lower limb
-            (i32.wrap/i64 (get_local $0))))
-
-    (func $i64.log_tee
-        (param $0 i64)
-        (result i64)
-        (call $i64.log (get_local $0))
-        (return (get_local $0)))
 
     (global $a (mut i32) (i32.const 0))
     (global $b (mut i32) (i32.const 0))
@@ -147,23 +119,6 @@
     (local $w52 i32) (local $w53 i32) (local $w54 i32) (local $w55 i32)
     (local $w56 i32) (local $w57 i32) (local $w58 i32) (local $w59 i32) 
     (local $w60 i32) (local $w61 i32) (local $w62 i32) (local $w63 i32)
-
-    (local $tmp0 i32)
-    (local $tmp1 i32)
-    (local $tmp2 i32)
-    (local $tmp3 i32)
-    (local $tmp4 i32)
-    (local $tmp5 i32)
-    (local $tmp6 i32)
-    (local $tmp7 i32)
-    (local $tmp8 i32)
-    (local $tmp9 i32)
-    (local $tmp10 i32)
-    (local $tmp11 i32)
-    (local $tmp12 i32)
-    (local $tmp13 i32)
-    (local $tmp14 i32)
-    (local $tmp15 i32)
 
     ;;  store inital state
     (if (i32.eq (i32.load offset=104 (get_local $ctx)) (i32.const 0))
@@ -319,32 +274,6 @@
     (call $round (get_local $w62) (i32.const 0xbef9a3f7))
     (call $round (get_local $w63) (i32.const 0xc67178f2))
 
-(call $i64.log (i64.const -1))
-(call $i32.log (i32.load offset=0  (get_local $ctx))) ;;(get_global $a))
-(call $i32.log (i32.load offset=8  (get_local $ctx))) ;;(get_global $b))
-(call $i32.log (i32.load offset=16 (get_local $ctx))) ;;(get_global $c))
-(call $i32.log (i32.load offset=24 (get_local $ctx))) ;;(get_global $d))
-(call $i32.log (i32.load offset=32 (get_local $ctx))) ;;(get_global $e))
-(call $i32.log (i32.load offset=40 (get_local $ctx))) ;;(get_global $f))
-(call $i32.log (i32.load offset=48 (get_local $ctx))) ;;(get_global $g))
-(call $i32.log (i32.load offset=56 (get_local $ctx))) ;;(get_global $h))
-(call $i64.log (i64.const -1))
-    ;; (call $i32.log (get_local $w0))
-    ;;          (call $i32.log (get_local $w1))
-    ;;          (call $i32.log (get_local $w2))
-    ;;          (call $i32.log (get_local $w3))
-    ;;          (call $i32.log (get_local $w4))
-    ;;          (call $i32.log (get_local $w5))
-    ;;          (call $i32.log (get_local $w6))
-    ;;          (call $i32.log (get_local $w7))
-    ;;          (call $i32.log (get_local $w8))
-    ;;         (call $i32.log (get_local $w9))
-    ;;         (call $i32.log (get_local $w10))
-    ;;         (call $i32.log (get_local $w11))
-    ;;         (call $i32.log (get_local $w12))
-    ;;         (call $i32.log (get_local $w13))
-    ;;         (call $i32.log (get_local $w14))
-    ;;         (call $i32.log (get_local $w15))
     ;; store hash values
     (i32.store offset=0  (get_local $ctx) (i32.add (i32.load offset=0  (get_local $ctx)) (get_global $a)))
     (i32.store offset=4  (get_local $ctx) (i32.add (i32.load offset=4  (get_local $ctx)) (get_global $b)))
@@ -360,6 +289,7 @@
         ;;     0..32  hash state
         ;;    32..40  number of bytes read across all updates (128bit)
         ;;   40..104  store words between updates
+        ;;  104..108  init flag
 
         (local $bytes_read i64)
         (local $last_word i32)

@@ -31,7 +31,7 @@ function Sha256 () {
 
   if (!freeList.length) {
     freeList.push(head)
-    head += 100 // need 100 bytes for internal state
+    head += STATEBYTES // need 100 bytes for internal state
   }
 
   this.finalized = false
