@@ -114,6 +114,9 @@ Sha256.ready = function (cb) {
   return p
 }
 
+Sha256.WASM = wasm && wasm.buffer
+Sha256.SUPPORTED = typeof WebAssembly !== 'undefined'
+
 Sha256.prototype.ready = Sha256.ready
 
 function noop () {}
