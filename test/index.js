@@ -126,7 +126,7 @@ tape('several instances updated simultaneously', function (t) {
   t.end()
 })
 
-tape('reported bugs', function (t) {
+tape('reported bug', function (t) {
   const testBuf = Buffer.from('hello')
 
   const res = crypto.createHash('sha256').update(testBuf).digest('hex')
@@ -135,6 +135,23 @@ tape('reported bugs', function (t) {
 
   t.equal(res, res1)
   t.equal(res1, res2)
+  t.end()
+})
+
+tape('reported bug', function (t) {
+  const a = Buffer.alloc(100, 'hello')
+
+  const refHash = crypto.createHash('sha256')
+    .update(a)
+    .update(a)
+    .digest('hex')
+
+  const hash = sha256()
+    .update(a)
+    .update(a)
+    .digest('hex')
+
+  t.same(hash, refHash)
   t.end()
 })
 

@@ -69,7 +69,7 @@ function sig1 (a) {
 
 console.log(deriveWords())
 
-const K_words = [
+const k = [
   '428a2f98',
   '71374491',
   'b5c0fbcf',
@@ -151,6 +151,8 @@ for (let i = 0; i < 64; i++) {
   str.write(deriveWords(i))
   // console.log(`i32.store (i32.const ${292 + 4 * i}) (get_local $w${i}))`)
 }
+
+for (let i = 0; i < 64; i+=4) console.log(`(call $four_round (get_local $w${i}) (get_local $w${i+1}) (get_local $w${i+2}) (get_local $w${i+3})) (i32.const 0x${k[i]}) (i32.const 0x${k[i+1]}) (i32.const 0x${k[i+2]}) (i32.const 0x${k[i+3]})`)
 
 // for (let word of IV) {
 //   console.log(reverseEndian(word))
