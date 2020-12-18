@@ -171,7 +171,7 @@ function formatInput (input, enc) {
 
 function strToBuf (input, enc = 'utf8') {
   if (enc === 'hex') return hex2bin(input)
-  else if (enc === 'utf8' || enc === 'utf-8') return new TextDecoder().decode(input)
+  else if (enc === 'utf8' || enc === 'utf-8') return new TextEncoder().encode(input)
   else if (enc === 'base64') return atob(input)
   else throw new Error('Encoding: ' + enc + ' not supported')
 }
