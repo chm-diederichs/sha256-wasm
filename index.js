@@ -111,7 +111,7 @@ Sha256.ready = function (cb) {
     return
   }
 
-  var p = new Promise(function (reject, resolve) {
+  var p = new Promise(function (resolve, reject) {
     wasm.onload(function (err) {
       if (err) reject(err)
       else resolve()
