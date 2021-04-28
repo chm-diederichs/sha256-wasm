@@ -1,6 +1,6 @@
 {
   "name": "sha256-wasm",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "WebAssembly implementation of SHA-256",
   "main": "index.js",
   "scripts": {
