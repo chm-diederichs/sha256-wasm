@@ -28,12 +28,12 @@ function loadWebAssembly (opts) {
   }
 
   function onload (cb) {
-    if (mod.exports) return cb()
-
     if (ready) {
       ready.then(cb.bind(null, null)).catch(cb)
       return
     }
+
+    if (mod.exports) return cb()
 
     try {
       if (opts && opts.async) throw new Error('async')
