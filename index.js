@@ -167,5 +167,3 @@ function formatInput (input, enc) {
 function roundUp (n, base) {
   return (n + base - 1) & -base
 }
-
-function noop () {}
