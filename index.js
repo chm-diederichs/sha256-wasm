@@ -21,7 +21,7 @@ const freeList = []
 module.exports = Sha256
 const SHA256_BYTES = module.exports.SHA256_BYTES = 32
 const INPUT_OFFSET = 40
-const STATEBYTES = 108
+const STATEBYTES = 104
 const BLOCKSIZE = 64
 
 function Sha256 () {
@@ -39,14 +39,19 @@ function Sha256 () {
   this.pos = 0
 
   this._memory = new Uint8Array(wasm.memory.buffer)
-  this._memory.fill(0, this.pointer, this.pointer + STATEBYTES)
-
   if (this.pointer + this.digestLength > this._memory.length) this._realloc(this.pointer + STATEBYTES)
+
+  this.init()
 }
 
 Sha256.prototype._realloc = function (size) {
   wasm.memory.grow(Math.max(0, Math.ceil(Math.abs(size - this._memory.length) / 65536)))
   this._memory = new Uint8Array(wasm.memory.buffer)
+}
+
+Sha256.prototype.init = function (buf) {
+  this._memory.fill(0, this.pointer, this.pointer + STATEBYTES)
+  wasm.sha256_init(this.pointer)
 }
 
 Sha256.prototype.update = function (input, enc) {
